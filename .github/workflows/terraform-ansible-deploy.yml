@@ -46,7 +46,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ansible python3-boto3 python3-botocore
+          sudo apt-get install -y python3-pip
+          pip3 install ansible boto3 botocore
 
       - name: Set up SSH private key
         run: |
@@ -57,7 +58,7 @@ jobs:
       - name: Create Ansible config
         run: |
           echo '[defaults]' > ansible.cfg
-          echo 'inventory = ansible/inventory/aws_ec2.yml' >> ansible.cfg
+          echo 'inventory = ./ansible/inventory/aws_ec2.yml' >> ansible.cfg
           echo 'host_key_checking = False' >> ansible.cfg
           echo 'remote_user = ubuntu' >> ansible.cfg
 
@@ -65,5 +66,6 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
         run: |
           ansible-playbook ansible/playbooks/setup-prometheus.yml
