@@ -1,17 +1,13 @@
+---
 plugin: aws_ec2
 regions:
-  - us-east-1  # Set your region
+  - us-east-1
 filters:
   tag:Environment: Dev
-  instance-state-name: running
-
 keyed_groups:
   - key: tags.Name
     prefix: name
-
-compose:
-  ansible_host: private_ip_address  # or use public_ip_address if needed
-
-# Optional: If you want to auto-label the host with its Name tag
 hostnames:
-  - tag:Name
+  - private-ip-address
+compose:
+  ansible_host: private_ip_address
