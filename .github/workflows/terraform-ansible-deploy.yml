@@ -60,7 +60,7 @@ jobs:
           echo '[defaults]' > ansible.cfg
           echo 'inventory = ./ansible/inventory/aws_ec2.yml' >> ansible.cfg
           echo 'host_key_checking = False' >> ansible.cfg
-          echo 'remote_user = ubuntu' >> ansible.cfg
+          echo 'remote_user = ec2-user' >> ansible.cfg
 
       - name: Run Ansible Playbook
         env:
