@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: phone-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: app
+  template:
+    metadata:
+      labels:
+        tier: app
+    spec:
+      containers:
+      - name: app
+        image: dainmusty/phone-store:latest
+        env:
+        - name: DB_HOST
+          value: db-service
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: phone-store
+spec:
+  type: ClusterIP
+  selector:
+    tier: app
+  ports:
+    - port: 8080
+      targetPort: 8080
