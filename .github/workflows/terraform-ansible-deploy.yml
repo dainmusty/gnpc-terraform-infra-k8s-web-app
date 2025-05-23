@@ -45,13 +45,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-pip
-          pip3 install boto3 botocore
+          python3 -m pip install --upgrade pip
+          pip install boto3 botocore
+          
 
       - name: Set up SSH private key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ANSIBLE_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
           echo -e "Host *\n  StrictHostKeyChecking=no" >> ~/.ssh/config
 
       - name: Configure Ansible
