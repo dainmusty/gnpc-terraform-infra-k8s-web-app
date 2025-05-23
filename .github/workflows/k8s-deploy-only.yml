@@ -1,0 +1,46 @@
+name: Kubernetes Deploy Only
+
+on:
+  workflow_run:
+    workflows: ["Terraform + Ansible Deploy"]
+    types:
+      - completed
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: effulgencetech-dev
+
+jobs:
+  deploy-k8s-only:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set environment name
+      id: env
+      run: |
+        if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
+          echo "env=dev" >> $GITHUB_OUTPUT
+        elif [[ "${GITHUB_REF##*/}" == "staging" ]]; then
+          echo "env=staging" >> $GITHUB_OUTPUT
+        else
+          echo "env=prod" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Update kubeconfig for EKS
+      run: |
+        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+    - name: Deploy Kubernetes Manifests
+      run: |
+        kubectl apply -f k8s/${{ steps.env.outputs.env }}/

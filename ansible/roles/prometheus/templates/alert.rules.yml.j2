@@ -1,0 +1,14 @@
+---
+groups:
+  - name: instance-alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: rate(node_cpu_seconds_total{mode="user"}[2m]) > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "Instance {{ '{{ $labels.instance }}' }} has high CPU usage for over 2 minutes."
+
+          

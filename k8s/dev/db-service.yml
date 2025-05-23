@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ClusterIP
+metadata:
+  name: db-service
+  namespace: three-tier-app
+spec:
+  selector:
+    tier: db
+  ports:
+    - port: 5432

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: phone-store
+spec:
+  type: ClusterIP
+  selector:
+    tier: web
+  ports:
+    - port: 80        # Exposed to the ingress
+      targetPort: 80  # The port your container is listening on

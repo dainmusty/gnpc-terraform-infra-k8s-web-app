@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phone-store
+  labels:
+    name: phone-store
+    app: phone-store
+    environment: dev
+    owner: dev-team
+    tier: frontend
+    version: v1.0.0
