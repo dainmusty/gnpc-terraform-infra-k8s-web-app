@@ -256,7 +256,7 @@ module "s3" {
 module "monitoring" {
   source               = "../../modules/monitoring"   # This has the instances for Prometheus and Grafana
   vpc_id               = module.vpc.vpc_id
-  ami                  = "ami-08b5b3a93ed654d19" 
+  ami                  = "ami-0953476d60561c955" 
   instance_type        = "t2.micro"
   subnet_id            = module.vpc.vpc_public_subnets[0]
   security_group_ids   = [module.security_group.monitoring_sg_id]
