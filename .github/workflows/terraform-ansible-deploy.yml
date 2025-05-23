@@ -1,4 +1,4 @@
-name: Terraform + Ansible Deploy
+name: Terraform Apply and Ansible Setup
 
 on:
   push:
@@ -7,69 +7,59 @@ on:
 
 jobs:
   terraform:
-    name: Deploy Infra with Terraform
+    name: Terraform Apply
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.6
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      - name: Terraform Init
+        run: terraform init
 
-      - name: Terraform Init & Apply
-        working-directory: env/dev  
-        run: |
-          terraform init -input=false
-          terraform apply -auto-approve -input=false
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
   ansible:
-    name: Configure Prometheus with Ansible
+    name: Ansible Setup
     needs: terraform
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Install Ansible and dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install Ansible and AWS dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible python3-pip
-          python3 -m pip install --upgrade pip
-          pip install boto3 botocore
-          
+          python -m pip install --upgrade pip
+          pip install ansible boto boto3 botocore
 
-      - name: Set up SSH private key
+      - name: Write SSH key from secret
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ANSIBLE_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 400 ~/.ssh/id_rsa
-          echo -e "Host *\n  StrictHostKeyChecking=no" >> ~/.ssh/config
-
-      - name: Configure Ansible
-        run: |
-          mkdir -p ./ansible
-          echo '[defaults]' > ansible.cfg
-          echo 'inventory = ansible/inventory/aws_ec2.yml' >> ansible.cfg
-          echo 'host_key_checking = False' >> ansible.cfg
-          echo 'remote_user = ec2-user' >> ansible.cfg
-          echo '[inventory]' >> ansible.cfg
-          echo 'enable_plugins = aws_ec2' >> ansible.cfg
 
       - name: Run Ansible Playbook
+        run: ansible-playbook ansible/playbooks/setup-prometheus.yml
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-        run: |
-          ansible-playbook ansible/playbooks/setup-prometheus.yml
+          AWS_REGION: ${{ secrets.AWS_REGION }}
