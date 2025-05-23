@@ -1,4 +1,3 @@
----
 plugin: aws_ec2
 regions:
   - us-east-1
@@ -8,6 +7,6 @@ keyed_groups:
   - key: tags.Name
     prefix: name
 hostnames:
-  - private-ip-address
+  - public-ip-address
 compose:
-  ansible_host: private_ip_address
+  ansible_host: public_ip_address
