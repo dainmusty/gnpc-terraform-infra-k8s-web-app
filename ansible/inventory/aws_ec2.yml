@@ -3,10 +3,14 @@ regions:
   - us-east-1
 filters:
   tag:Environment: Dev
-keyed_groups:
-  - key: tags.Name
-    prefix: name
 hostnames:
   - public-ip-address
 compose:
   ansible_host: public_ip_address
+keyed_groups:
+  - key: tags.Name
+    prefix: name
+
+# ✅ Explicit Python interpreter where boto3 is installed
+vars:
+  ansible_python_interpreter: /usr/bin/python3
