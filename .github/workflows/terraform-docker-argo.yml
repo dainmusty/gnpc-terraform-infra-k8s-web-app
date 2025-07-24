@@ -9,7 +9,6 @@ env:
   AWS_REGION: us-east-1
   CLUSTER_NAME: effulgencetech-dev
   SONAR_PROJECT_KEY: gnpc-terraform-infra-k8s-web-app
-  SONAR_HOST_URL: https://sonarcloud.io/project/overview?id=dainmusty_gnpc-terraform-infra-k8s-web-app
 
 jobs:
   security-scan:
@@ -46,22 +45,16 @@ jobs:
           name: OWASP Depcheck Report
           path: reports
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
         with:
+          projectBaseDir: .
           args: >
+            -Dsonar.organization=effulgencetech
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ env.SONAR_ORG }}
-            -Dsonar.host.url=${{ env.SONAR_HOST_URL }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    env:
-      SONAR_PROJECT_KEY: gnpc-terraform-infra-k8s-web-app
-      SONAR_ORG: my-org
-      SONAR_HOST_URL: https://sonarcloud.io
-      TRIVY_IGNORE_UNFIXED: true
-      TRIVY_SEVERITY: CRITICAL,HIGH
+          SONAR_HOST_URL: https://sonarcloud.io
 
   docker-build-push:
     name: Build & Push Docker Image
