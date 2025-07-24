@@ -28,11 +28,26 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
 
+      - name: (Optional) Build project with Maven
+        run: mvn clean install || echo "Skipping Maven build (not a Java project)"
+
       - name: OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@v2.1.0
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
         with:
-          format: "HTML"
-          failOnCVSS: 7
+          project: 'effulgencetech'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+
+      - name: Upload OWASP Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: OWASP Depcheck Report
+          path: reports
 
       - name: SonarQube Scan
         uses: SonarSource/sonarcloud-github-action@v2
