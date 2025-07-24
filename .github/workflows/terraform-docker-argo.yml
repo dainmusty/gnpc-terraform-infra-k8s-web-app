@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: us-east-1
   CLUSTER_NAME: effulgencetech-dev
-  SONAR_PROJECT_KEY: gnpc-terraform-infra-k8s-web-app
+  SONAR_PROJECT_KEY: effulgencetech
 
 jobs:
   security-scan:
