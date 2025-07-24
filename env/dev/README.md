@@ -1,5 +1,9 @@
 # Source code management
+git status
 git add .
+git commit -m "your msg"
+git push origin dev
+
 
 # Terraform essential commands and notes
 terraform init
