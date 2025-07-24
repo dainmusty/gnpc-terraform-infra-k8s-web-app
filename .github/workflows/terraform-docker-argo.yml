@@ -13,23 +13,20 @@ env:
 
 jobs:
   security-scan:
-    name: Run Security Scans (Trivy + OWASP + SonarQube)
+    name: Run Security Scans (Trivy + OWASP + SonarCloud)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Trivy Scan for filesystem & Dockerfile
+      - name: Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: .
           ignore-unfixed: true
           severity: CRITICAL,HIGH
-
-      - name: (Optional) Build project with Maven
-        run: mvn clean install || echo "Skipping Maven build"
 
       - name: OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
@@ -54,10 +51,17 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=my-org
+            -Dsonar.organization=${{ env.SONAR_ORG }}
             -Dsonar.host.url=${{ env.SONAR_HOST_URL }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    env:
+      SONAR_PROJECT_KEY: gnpc-terraform-infra-k8s-web-app
+      SONAR_ORG: my-org
+      SONAR_HOST_URL: https://sonarcloud.io
+      TRIVY_IGNORE_UNFIXED: true
+      TRIVY_SEVERITY: CRITICAL,HIGH
 
   docker-build-push:
     name: Build & Push Docker Image
