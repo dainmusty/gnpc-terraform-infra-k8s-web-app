@@ -12,6 +12,9 @@ module "vpc" {
   availability_zones    = ["us-east-1a", "us-east-1b"]
   public_ip_on_launch   = true
   PublicRT_cidr         = "0.0.0.0/0"
+  cluster_name          = "effulgencetech-dev"
+  PrivateRT_cidr        = "0.0.0.0/0"
+  eip_associate_with_private_ip = true
 }
 
 
@@ -40,6 +43,13 @@ module "security_group" {
     {
       from_port   = 443
       to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "HTTPS from anywhere"
+    },
+    {
+      from_port   = 9100
+      to_port     = 9100
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
       description = "HTTPS from anywhere"
@@ -116,49 +126,49 @@ module "security_group" {
 
 
 # # EC2 Module
-# module "ec2" {
-#   source = "../../modules/ec2"
+module "ec2" {
+  source = "../../modules/ec2"
 
-#   ResourcePrefix             = "GNPC-Dev"
-#   ami_ids                    = ["ami-08b5b3a93ed654d19", "ami-02a53b0d62d37a757", "ami-02e3d076cbd5c28fa", "ami-0c7af5fe939f2677f", "ami-04b4f1a9cf54c11d0"]
-#   ami_names                  = ["AL2023", "AL2", "Windows", "RedHat", "ubuntu"]
-#   instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
-#   key_name             = module.ssm.key_name_parameter_value
-#   admin_profile_name                   = module.iam.admin_instance_profile_name
-#   public_instance_count      = [1, 0, 0, 0, 0]
-#   private_instance_count     = [0, 0, 0, 0, 0]
+  ResourcePrefix             = "GNPC-Dev"
+  ami_ids                    = ["ami-08b5b3a93ed654d19", "ami-02a53b0d62d37a757", "ami-02e3d076cbd5c28fa", "ami-0c7af5fe939f2677f", "ami-04b4f1a9cf54c11d0"]
+  ami_names                  = ["AL2023", "AL2", "Windows", "RedHat", "ubuntu"]
+  instance_types             = ["t2.micro", "t2.micro", "t2.micro", "t2.micro", "t2.micro"]
+  key_name             = module.ssm.key_name_parameter_value
+  admin_profile_name                   = module.iam.admin_instance_profile_name
+  public_instance_count      = [0, 0, 0, 0, 0]
+  private_instance_count     = [0, 0, 0, 0, 0]
 
-#   tag_value_public_instances = [
-#     [
-#       {
-#         Name        = "web-server"
-#         Environment = "Dev"
-#       },
+  tag_value_public_instances = [
+    [
+      {
+        Name        = "app_servers"
+        Environment = "Dev"
+      },
       
-#     ],
-#     [], [], [], []
-#   ]
+    ],
+    [], [], [], []
+  ]
 
-#   tag_value_private_instances = [
-#     [],
-#     [
-#       {
-#         Name = "db1"
-#         Tier = "Database"
-#       }
-#     ],
-#     [],
-#     [], []
-#   ]
+  tag_value_private_instances = [
+    [],
+    [
+      {
+        Name = "db1"
+        Tier = "Database"
+      }
+    ],
+    [],
+    [], []
+  ]
 
-#   vpc_id                     = module.vpc.vpc_id
-#   public_subnet_ids          = module.vpc.vpc_public_subnets
-#   private_subnet_ids         = module.vpc.vpc_private_subnets
-#   public_sg_id               = module.security_group.public_sg_id
-#   private_sg_id              = module.security_group.private_sg_id
-#   volume_size                = 8
-#   volume_type                = "gp3"
-# }
+  vpc_id                     = module.vpc.vpc_id
+  public_subnet_ids          = module.vpc.vpc_public_subnets
+  private_subnet_ids         = module.vpc.vpc_private_subnets
+  public_sg_id               = module.security_group.public_sg_id
+  private_sg_id              = module.security_group.private_sg_id
+  volume_size                = 8
+  volume_type                = "gp3"
+}
 
 # # IAM Module
 module "iam" {
@@ -166,13 +176,11 @@ module "iam" {
 
   # Resource Tags
   env          = "dev"
-  cluster_name = "effulgencetech-dev"
+  
   company_name = "GNPC"
 
   # Role Services Allowed
   admin_role_principals          = ["ec2.amazonaws.com", "cloudwatch.amazonaws.com", "config.amazonaws.com", "apigateway.amazonaws.com", "ssm.amazonaws.com"]  # Only include the services that actually need to assume the role.
-  eks_node_role_principals       = ["ec2.amazonaws.com"] # OR ["ssm.amazonaws.com"] for SSM-managed nodes or hybrid scenarios
-  eks_cluster_role_principals    = ["eks.amazonaws.com"]
   prometheus_role_principals     = ["ec2.amazonaws.com"]
   grafana_role_principals        = ["ec2.amazonaws.com"]
   s3_rw_role_principals          = ["ec2.amazonaws.com"]
@@ -192,7 +200,14 @@ module "iam" {
   # S3 Buckets Referenced
   log_bucket_arn        = module.s3.operations_bucket_arn
   operations_bucket_arn = module.s3.log_bucket_arn
+
+  # addons variables
+  oidc_provider_arn     = module.eks.oidc_provider_arn
+  grafana_secret_name   = "grafana-user-passwd"
+  cluster_name = module.eks.cluster_name
+
 }
+
 
 
 
@@ -256,7 +271,7 @@ module "s3" {
 module "monitoring" {
   source               = "../../modules/monitoring"   # This has the instances for Prometheus and Grafana
   vpc_id               = module.vpc.vpc_id
-  ami                  = "ami-0953476d60561c955" 
+  ami                  = "ami-08b5b3a93ed654d19" 
   instance_type        = "t2.micro"
   subnet_id            = module.vpc.vpc_public_subnets[0]
   security_group_ids   = [module.security_group.monitoring_sg_id]
@@ -280,24 +295,30 @@ grafana_tags = {
 
 
 module "eks" {
-  source         = "../../modules/eks"
-  cluster_name   = "effulgencetech-dev"
-  node_group_name = "dev-nodegroup"
-  instance_type  = "t2.medium"   # I think it should be t2.medium, will double check
-  desired_nodes  = 2
-  min_nodes      = 1
-  max_nodes      = 3
-  subnet_ids     = module.vpc.vpc_private_subnets
-  eks_cluster_role_arn = module.iam.eks_cluster_role_arn
-  eks_node_role_arn = module.iam.eks_node_role_arn
-  cluster_AmazonEKSClusterPolicy = module.iam.cluster_AmazonEKSClusterPolicy
-  node_AmazonEC2ContainerRegistryReadOnly = module.iam.node_AmazonEC2ContainerRegistryReadOnly
-  node_AmazonEKS_CNI_Policy = module.iam.node_AmazonEKS_CNI_Policy
-  node_AmazonEKSWorkerNodePolicy = module.iam.node_AmazonEKSWorkerNodePolicy
+  source                  = "../../modules/eks"
+  region                  = "us-east-1"
+  vpc_cidr                = "192.168.0.0/16"
+  public_subnet_1_cidr    = "192.168.32.0/19"
+  public_subnet_2_cidr    = "192.168.0.0/19"
+  private_subnet_1_cidr   = "192.168.96.0/19"
+  private_subnet_2_cidr   = "192.168.64.0/19"
+  availability_zone_1     = "us-east-1f"
+  availability_zone_2     = "us-east-1b"
+  availability_zone_3     = "us-east-1d"
+  availability_zone_4     = "us-east-1a"
 
+  cluster_name            = "effulgencetech-dev"
+  kube_version            = "1.32"
+  node_group_name         = "dev-nodegroup"
+  instance_type           = "t2.medium"
+  ami_type                = "AL2_x86_64"
+  desired_capacity        = 2
+  min_size                = 1
+  max_size                = 3
+  volume_size             = 80
+  volume_iops             = 3000
+  volume_throughput       = 125
 }
-
-
 
 # # module "rds" {
 # #   source = "../../modules/rds"
@@ -333,12 +354,40 @@ module "ssm" {
   db_secret_parameter_name  = "/db/secure/access"
   key_path_parameter_name   = "/kp/path"
   key_name_parameter_name   = "/kp/name"
+  grafana_admin_password    = "/grafana/admin/password"
 }
 
+# module "secrets" {
+#   source         = "../../modules/secrets"
+ 
+# }
 
 
 
+# # Addons Module
+module "addons" {
+  source            = "../../modules/addons"
+  # Required variables
+  region            = "us-east-1"
+  cluster_name      = module.eks.cluster_name
 
+  alb_controller_role = module.iam.alb_controller_role
+
+  # ArgoCD variables
+  argocd_role_arn   = module.iam.argocd_role_arn
+  argocd_hostname   = "argocd.local"
+
+  # Grafana variables
+  grafana_secret_name     = "grafana-user-passwd"
+  grafana_irsa_arn = module.iam.grafana_irsa_arn
+
+  # Slack Webhook for Alertmanager variable
+  slack_webhook_secret_name = "slack-webhook-alertmanager"
+
+  # Ebs variables
+  ebs_csi_role_arn = module.iam.ebs_csi_role_arn
+  
+}
 
 
 
