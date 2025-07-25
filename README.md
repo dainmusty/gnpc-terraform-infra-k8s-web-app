@@ -1,1 +1,0 @@
-# gnpc-terraform-infra-k8s-web-app
