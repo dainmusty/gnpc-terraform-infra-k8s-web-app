@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: fonapp
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: dainmusty/effulgencetech-nodejs-img:latest
+        ports:
+        - containerPort: 8080
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: fonapp   # <-- Add this line
+spec:
+  selector:
+    app: backend
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30081  # Optional — choose a port between 30000–32767
+
+
+
+# kubectl apply -f backend.yml
+# kubectl port-forward -n fonapp svc/backend-service 8080:8080
+# http://localhost:8080
+

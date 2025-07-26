@@ -1,0 +1,8 @@
+- name: Include install tasks
+  include_tasks: install.yml
+
+- name: Include data source configuration
+  include_tasks: configure_datasources.yml
+
+- name: Include dashboard configuration
+  include_tasks: configure_dashboards.yml

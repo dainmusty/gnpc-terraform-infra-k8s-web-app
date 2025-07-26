@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fonapp
+  labels:
+    name: fonapp
+    app: fonapp
+    environment: dev
+    owner: dev-team
+    tier: frontend
+    version: v1.0.0
+
+
+# kubectl apply -f namespace.yml    

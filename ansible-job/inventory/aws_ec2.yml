@@ -1,0 +1,31 @@
+---
+plugin: aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:monitoring: present
+  instance-state-name: running
+keyed_groups:
+  - key: tags.prometheus
+    separator: ""
+    prefix: ""
+    transform: regex_replace('_+', '_')
+  - key: tags.grafana
+    separator: ""
+    prefix: ""
+    transform: regex_replace('_+', '_')
+  - key: tags.app_servers
+    separator: ""
+    prefix: ""
+    transform: regex_replace('_+', '_')
+compose:
+  ansible_host: public_ip_address
+
+defaults:
+  ansible_python_interpreter: /usr/bin/python3.9
+
+
+#Tag your instances with the following tags to use this inventory:
+# Key             Value
+# monitoring      present
+# app_servers     app_servers

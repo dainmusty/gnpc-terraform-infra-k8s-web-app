@@ -1,0 +1,44 @@
+{
+  "id": null,
+  "uid": "vpc-dashboard",
+  "title": "VPC Flow Logs",
+  "timezone": "browser",
+  "schemaVersion": 18,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "VPC Accepted Bytes",
+      "datasource": "CloudWatch",
+      "targets": [
+        {
+          "region": "us-east-1",
+          "namespace": "AWS/VPC",
+          "metricName": "Bytes",
+          "dimensions": { "TrafficType": "ACCEPT" },
+          "statistics": ["Sum"],
+          "period": 300,
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "type": "stat",
+      "title": "VPC Rejected Bytes",
+      "datasource": "CloudWatch",
+      "targets": [
+        {
+          "region": "us-east-1",
+          "namespace": "AWS/VPC",
+          "metricName": "Bytes",
+          "dimensions": { "TrafficType": "REJECT" },
+          "statistics": ["Sum"],
+          "period": 300,
+          "refId": "B"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 }
+    }
+  ]
+}

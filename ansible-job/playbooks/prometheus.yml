@@ -1,0 +1,9 @@
+---
+- name: Setup Prometheus
+  hosts: prometheus
+  become: true
+  roles:
+    - prometheus
+    
+
+# ansible/playbooks/prometheus.yml

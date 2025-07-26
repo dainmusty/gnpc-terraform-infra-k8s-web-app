@@ -1,0 +1,62 @@
+groups:
+  - name: node-exporter-alerts
+    rules:
+      - alert: HostHighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 2m
+        labels:
+          severity: warning
+          alertname: HostHighCPUUsage
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is over 90% for more than 2 minutes."
+
+      - alert: HostOutOfMemory
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 5
+        for: 1m
+        labels:
+          severity: critical
+          alertname: HostOutOfMemory
+        annotations:
+          summary: "Out of memory on {{ $labels.instance }}"
+          description: "Available memory is less than 5%."
+
+      - alert: HostHighDiskUsage
+        expr: (node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} - node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"}) / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          alertname: HostHighDiskUsage
+        annotations:
+          summary: "Disk usage above 90% on {{ $labels.instance }}"
+          description: "Running low on disk space on root volume."
+
+      - alert: NodeDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          alertname: NodeDown
+        annotations:
+          summary: "Node {{ $labels.instance }} is down"
+          description: "Prometheus cannot scrape the target."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          alertname: HighMemoryUsage
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90%."
+
+      - alert: LowDiskSpace
+        expr: node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} < 0.1
+        for: 2m
+        labels:
+          severity: warning
+          alertname: LowDiskSpace
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Less than 10% disk space remaining on root volume."

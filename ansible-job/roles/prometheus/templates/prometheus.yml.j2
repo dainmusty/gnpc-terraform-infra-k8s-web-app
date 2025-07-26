@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+
+rule_files:
+  - "/etc/prometheus/alerts/*.yml"
+
+scrape_configs:
+  - job_name: 'app_servers'
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 9100
+        filters:
+          - name: "tag:Name"
+            values: ["app_servers"]
+    relabel_configs:
+      - source_labels: [__meta_ec2_public_ip]       # change to private_ip_address if you want to use private IPs
+        target_label: instance
+      - source_labels: [__meta_ec2_public_ip]
+        target_label: __address__
+        replacement: '{{ "$1:9100" }}'

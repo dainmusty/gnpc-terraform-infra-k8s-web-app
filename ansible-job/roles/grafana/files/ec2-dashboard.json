@@ -1,0 +1,26 @@
+{
+  "id": null,
+  "uid": "ec2-dashboard",
+  "title": "EC2 Monitoring",
+  "timezone": "browser",
+  "schemaVersion": 18,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "CPU Utilization",
+      "datasource": "CloudWatch",
+      "targets": [
+        {
+          "region": "us-east-1",
+          "namespace": "AWS/EC2",
+          "metricName": "CPUUtilization",
+          "statistics": ["Average"],
+          "period": 300,
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+    }
+  ]
+}

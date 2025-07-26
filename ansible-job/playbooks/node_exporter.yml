@@ -1,0 +1,10 @@
+---
+- name: Install Node Exporter on App Servers
+  hosts: app_servers   # <--- THIS defines where the role runs
+  become: true
+  roles:
+    - node-exporter
+
+
+
+# ansible/playbooks/node_exporter.yml

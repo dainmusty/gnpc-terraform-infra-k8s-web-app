@@ -1,0 +1,35 @@
+---
+- name: Ensure alerts directory exists
+  file:
+    path: /etc/prometheus/alerts
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+
+- name: Copy Prometheus alert rule files
+  copy:
+    src: "{{ item }}"
+    dest: /etc/prometheus/alerts/
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+  with_fileglob:
+    - "{{ role_path }}/files/alerts/*.yml"
+  notify: Restart Prometheus
+
+- name: Ensure rule_files block exists in prometheus.yml
+  lineinfile:
+    path: /etc/prometheus/prometheus.yml
+    regexp: '^rule_files:'
+    line: 'rule_files:'
+    insertafter: '^global:'
+  notify: Restart Prometheus
+
+- name: Configure rule file path in prometheus.yml
+  lineinfile:
+    path: /etc/prometheus/prometheus.yml
+    regexp: '^ *- /etc/prometheus/alerts/'
+    line: '  - /etc/prometheus/alerts/*.yml'
+    insertafter: 'rule_files:'
+  notify: Restart Prometheus

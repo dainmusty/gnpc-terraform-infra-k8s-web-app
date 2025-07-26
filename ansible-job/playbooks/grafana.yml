@@ -1,0 +1,12 @@
+- name: Configure Grafana on monitoring hosts
+  hosts: grafana
+  become: true
+  vars:
+    prometheus_host: "{{ hostvars[groups['prometheus'][0]]['ansible_host'] }}"
+  roles:
+    - grafana
+
+
+
+# ansible-playbook -i aws_ec2.yml playbooks/grafana.yml
+# ansible-playbook -i /etc/ansible/aws_ec2.yml grafana.yml

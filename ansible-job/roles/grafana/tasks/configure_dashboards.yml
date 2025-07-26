@@ -1,0 +1,35 @@
+---
+- name: Ensure Grafana dashboards directory exists
+  file:
+    path: /var/lib/grafana/dashboards
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0755'
+
+- name: Copy predefined dashboards
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/grafana/dashboards/
+    owner: grafana
+    group: grafana
+    mode: '0644'
+  with_fileglob:
+    - "{{ role_path }}/files/*.json"
+
+- name: Configure dashboard provisioning
+  copy:
+    dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+    content: |
+      apiVersion: 1
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards
+    owner: grafana
+    group: grafana
+    mode: '0644'
+  notify: Restart Grafana

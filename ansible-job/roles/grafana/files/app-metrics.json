@@ -1,0 +1,23 @@
+{
+  "id": null,
+  "uid": "app-metrics",
+  "title": "App Metrics (Prometheus)",
+  "timezone": "browser",
+  "schemaVersion": 18,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests Per Second",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "req/sec",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+    }
+  ]
+}
