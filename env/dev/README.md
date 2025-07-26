@@ -60,7 +60,6 @@ a7VW0a29v8HRC5ky
 # to access grafana locally
 kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
 
-gfnpasswd$1234
 
 # to access prometheus locally
 kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090

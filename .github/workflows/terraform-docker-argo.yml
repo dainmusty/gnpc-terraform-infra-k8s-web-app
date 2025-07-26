@@ -130,4 +130,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git commit --allow-empty -m "Trigger ArgoCD sync"
-          git push origin dev
+          git push origin main
