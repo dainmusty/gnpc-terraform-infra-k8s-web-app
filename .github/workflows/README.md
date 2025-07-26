@@ -364,3 +364,8 @@ jobs:
           git push origin dev
 
 # security-scan → docker-build-push → terraform → deploy-k8s.
+
+# to update the sonarqube project key
+go to sonarcloud,go to your project, go to admin and then update key
+
+# to run the CI, you need to put off automatic analysis in sonarcloud otherwise there is a conflict
