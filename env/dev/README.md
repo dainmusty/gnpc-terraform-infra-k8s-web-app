@@ -336,3 +336,167 @@ Edit
     aws-region: us-east-1
 🛠 Option 2: Pass a profile (not recommended in CI)
 If you insist on using profile, you'd need to also configure that profile manually in GitHub Actions — but it's not the standard practice in CI/CD.
+
+
+
+: variable "cluster_name" {
+│ 
+│ The root module input variable "cluster_name" is not set, and has no
+│ default value. Use a -var or -var-file command line argument to provide a
+│ value for this variable.
+╵
+╷
+│ Error: No value for required variable
+│ 
+│   on variables.tf line 7:
+│    7: variable "region" {
+│ 
+│ The root module input variable "region" is not set, and has no default
+│ value. Use a -var or -var-file command line argument to provide a value for
+│ this variable.
+╵
+Error: Terraform exited with code 1.
+Error: Process completed with exit code 1.
+
+i have variables in my providers.tf whose variables have not been provided in the main.tf in the root module although those same variables (cluster_name and region) and their values have been provided in the eks module so i was thinking terraform would recognise that they are the same variables. 
+
+i have a question though, in terms of best practise, where is the best place to put the providers.tf, should it be in the root module or any of the child modules?
+
+for now, am thinking of providing the default values in the variables.tf, will that work?
+
+
+ChatGPT said:
+Great questions — let's break it down and address both the Terraform error and your architecture/best practice question around providers.tf and variable declarations.
+
+🔴 Error Explanation
+You're seeing this error:
+
+pgsql
+Copy
+Edit
+The root module input variable "cluster_name" is not set, and has no default value.
+That means:
+
+Terraform is evaluating the root module (env/dev or similar).
+
+The root module has a variables.tf that defines cluster_name and region but doesn't assign values.
+
+Even though these variables are passed into a child module (like module.eks), Terraform does NOT back-propagate variables from child modules to the root. That’s by design.
+
+✅ How to Fix It
+You have three options:
+
+Option 1: Pass -var or use a *.tfvars file
+Best for CI/CD workflows like GitHub Actions.
+
+In your GitHub Actions workflow:
+
+bash
+Copy
+Edit
+terraform apply -var="region=us-east-1" -var="cluster_name=effulgencetech-dev" --auto-approve
+Or use a terraform.tfvars file:
+
+hcl
+Copy
+Edit
+# terraform.tfvars
+region = "us-east-1"
+cluster_name = "effulgencetech-dev"
+And just run:
+
+bash
+Copy
+Edit
+terraform apply --auto-approve
+Option 2: Set default values in variables.tf
+Best for quick development/testing, not always ideal for production.
+
+In variables.tf:
+
+hcl
+Copy
+Edit
+variable "region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "cluster_name" {
+  description = "EKS cluster name"
+  type        = string
+  default     = "effulgencetech-dev"
+}
+✅ Yes, this will fix the error.
+⚠️ Just be cautious — using default can lead to accidental deployments to wrong regions or naming conflicts.
+
+Option 3: Reference values in your terraform.tfvars or your CI/CD pipeline (best practice)
+In production or shared environments, explicitly set these in a .tfvars file or pass them via CI/CD to avoid unexpected values.
+
+📦 Best Practice: Where to Put providers.tf?
+✅ Best Practice: Always define provider blocks in the root module.
+
+Why:
+
+Terraform only configures providers from the root module.
+
+You can’t define a top-level provider in a child module and expect it to work automatically.
+
+Child modules can declare provider aliases, but those aliases must be configured in the root.
+
+So:
+
+h
+Copy
+Edit
+# ✅ GOOD: Root-level providers.tf
+provider "aws" {
+  region = var.region
+}
+Then in the child module:
+
+hcl
+Copy
+Edit
+module "eks" {
+  source       = "../modules/eks"
+  region       = var.region
+  cluster_name = var.cluster_name
+}
+And optionally in the child module, if you're doing multi-provider setup:
+
+hcl
+Copy
+Edit
+provider "aws" {
+  alias  = "this"
+  region = var.region
+}
+Then the root passes it in like:
+
+h
+Copy
+Edit
+module "eks" {
+  source  = "../modules/eks"
+  providers = {
+    aws = aws.this
+  }
+  ...
+}
+✅ Summary
+Concern	Best Practice
+Variable error	Declare or pass cluster_name and region in the root module via defaults, -var, or .tfvars.
+Providers	Always put providers.tf in the root module only.
+Default values	Okay for development; avoid for production-critical values. Prefer explicit *.tfvars.
+
+Let me know if you'd like help templating your terraform.tfvars or updating the GitHub Actions step to pass these values dynamically.
+
+
+
+
+
+
+
+
