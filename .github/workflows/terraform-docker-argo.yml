@@ -125,12 +125,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Commit and push changes to trigger ArgoCD
+      - name: Set up Git user
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      - name: Commit empty change to trigger ArgoCD
+        run: |
+          git commit --allow-empty -m "Trigger ArgoCD sync" || echo "No changes to commit"
+
+      - name: Push changes
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git commit --allow-empty -m "Trigger ArgoCD sync" || echo "No changes to commit"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/dainmusty/gnpc-terraform-infra-k8s-web-app.git
           git push origin main
