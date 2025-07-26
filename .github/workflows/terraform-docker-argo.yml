@@ -130,9 +130,9 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
 
-      - name: Commit empty change to trigger ArgoCD
+      - name: Pull latest before pushing
         run: |
-          git commit --allow-empty -m "Trigger ArgoCD sync" || echo "No changes to commit"
+          git pull --rebase origin main
 
       - name: Push changes
         env:
