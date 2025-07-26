@@ -91,21 +91,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Terraform Init & Apply
+      - name: Terraform Init
+        working-directory: env/dev
+        run: terraform init -input=false
+
+      - name: Create EKS Cluster Stack (Targeted)
         working-directory: env/dev
         run: |
-          terraform init -input=false
-          terraform apply --auto-approve -target=aws_cloudformation_stack.eks_cluster_stack -input=false
-          terraform apply --auto-approve
-
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+          terraform apply \
+            --auto-approve \
+            -target=module.eks.aws_cloudformation_stack.eks_cluster_stack
 
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
+
+      - name: Terraform Full Apply (Post Cluster)
+        working-directory: env/dev
+        run: terraform apply --auto-approve
 
       - name: Check ArgoCD Status
         run: |
