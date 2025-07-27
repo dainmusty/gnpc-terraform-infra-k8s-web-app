@@ -11,4 +11,4 @@ metadata:
     version: v1.0.0
 
 
-# kubectl apply -f namespace.yml    
+# kubectl apply -f namespace.yml

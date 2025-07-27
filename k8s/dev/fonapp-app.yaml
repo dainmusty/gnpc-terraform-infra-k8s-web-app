@@ -1,6 +1,5 @@
 # Save this as k8s/dev/fonapp-app.yaml (recommended GitOps style)
 # kubectl apply -f k8s/dev/fonapp-app.yaml -n argocd
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -19,3 +18,4 @@ spec:
     automated:
       selfHeal: true
       prune: true
+
