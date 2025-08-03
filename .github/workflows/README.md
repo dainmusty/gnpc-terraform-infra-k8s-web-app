@@ -369,3 +369,340 @@ jobs:
 go to sonarcloud,go to your project, go to admin and then update key
 
 # to run the CI, you need to put off automatic analysis in sonarcloud otherwise there is a conflict
+
+
+# use this workflow if you want to trigger argo automatically
+
+name: Full CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: effulgencetech-dev
+  SONAR_PROJECT_KEY: dainmusty_gnpc-terraform-infra-k8s-web-app
+  SONAR_ORGANIZATION: effulgencetech
+
+jobs:
+  security-scan:
+    name: Run Security Scans (Trivy + OWASP + SonarCloud)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
+        with:
+          project: 'effulgencetech'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+
+      - name: Upload OWASP Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: OWASP Depcheck Report
+          path: reports
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SonarCloud Scanner
+        run: |
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip -q sonar-scanner.zip
+          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+            -Dsonar.organization=${SONAR_ORGANIZATION} \
+            -Dsonar.branch.name=${GITHUB_REF_NAME} \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN
+
+  terraform:
+    name: Deploy Infra with Terraform
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: env/dev
+        run: terraform init -input=false
+
+      - name: Create EKS Cluster Stack (Targeted)
+        working-directory: env/dev
+        run: |
+          terraform apply \
+            --auto-approve \
+            -target=module.eks.aws_cloudformation_stack.eks_cluster_stack
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
+
+      - name: Terraform Full Apply (Post Cluster)
+        working-directory: env/dev
+        run: terraform apply --auto-approve
+
+      - name: Check ArgoCD Status
+        run: |
+          echo "Checking ArgoCD pods status..."
+          kubectl get pods -n argocd
+          echo "Waiting for ArgoCD server pod to be ready..."
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s
+
+  deploy-k8s:
+    name: ArgoCD Sync
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Git user
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      - name: Pull latest before pushing
+        run: |
+          git pull --rebase origin main
+
+      - name: Push changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/dainmusty/gnpc-terraform-infra-k8s-web-app.git
+          git push origin main
+
+
+🔚 Conclusion
+✅ Best Practice: Use Git push to trigger changes, and let ArgoCD apply everything. No kubectl apply needed in GitHub Actions.
+
+You're on the right track — if you need help setting up validation steps in CI or Helm templating next, just say the word.
+
+
+
+
+
+
+
+
+You said:
+so i don't need anything to the workflow right? and once the workflow is complete, my job is to manually run kubectl apply -f k8s/dev/fonapp-argocd-app.yaml -n argocd right and then that's it?
+
+
+ChatGPT said:
+You're 99% correct — let's break it down clearly:
+
+✅ Once You’re Using ArgoCD, Your Workflow Should Be:
+1. Your GitHub Actions Workflow (CI)
+✅ Run linting, testing, scanning, etc.
+
+✅ Push any changes (infra or manifests) to GitHub repo.
+
+❌ No kubectl apply in the workflow for app manifests.
+
+✅ This triggers ArgoCD via the Application you created.
+
+🔁 ArgoCD automatically syncs the manifests from the Git repo to your cluster.
+
+❗️One-Time Manual Step (Bootstrap)
+Yes — this is the only time you manually run:
+
+bash
+Copy
+Edit
+kubectl apply -f k8s/dev/fonapp-argocd-app.yaml -n argocd
+This creates the ArgoCD Application resource (like a “watcher”) that monitors the k8s/fonapp/ path in GitHub and syncs everything there to the fonapp namespace.
+
+✅ After that, no more kubectl apply ever needed — just update the repo.
+
+🚀 So in summary:
+Task	How Often?	Who/What Does It?
+Create ArgoCD Application	Once	Manually (kubectl apply -f fonapp-argocd-app.yaml)
+Push manifest changes to Git	Often	You / GitHub Actions
+Apply manifests to cluster	Auto	ArgoCD syncs Git to cluster
+Add validation/scans/tests	Optional	GitHub Actions
+
+🟢 You're Done
+You’re in a proper GitOps loop now:
+
+Change YAML in Git
+
+GitHub Actions pushes to main
+
+ArgoCD sees it and syncs automatically
+
+You monitor status in ArgoCD UI or CLI
+
+Let me know if you want to:
+
+ To directly answer your question:
+Your current GitHub Actions workflow does not yet include ArgoCD webhook integration. However, it’s mostly following best practices, and I’ll explain exactly what’s covered and what’s missing.
+
+✅ What You're Doing Right
+✅ 1. Security Scanning Early
+Trivy + OWASP + SonarCloud — excellent for security and quality gates.
+
+✅ 2. Terraform Infrastructure Automation
+terraform apply --target=... → good approach for building infra incrementally.
+
+Cluster provisioning + kubeconfig update is handled properly.
+
+✅ 3. Syncing K8s via ArgoCD (Manually or Declaratively)
+You’ve chosen to register applications using declarative manifests (fonapp-argocd-app.yaml) — this is best practice.
+
+You did not include kubectl apply in the pipeline, which is fine if you do it once manually and let ArgoCD auto-sync afterward.
+
+⚠️ What’s Missing or Could Be Improved
+⚠️ 1. ArgoCD Sync Triggering Is Not Automatic Yet
+You currently don’t force sync ArgoCD after new commits. You rely on ArgoCD polling the repo. That’s okay but slow (default is 3 min interval).
+
+Better alternatives:
+
+ArgoCD Webhook integration: Instant sync on push (recommended).
+
+Or, add a job using the argocd app sync CLI.
+
+Verdict: ✅ Best to add a GitHub → ArgoCD webhook.
+
+⚠️ 2. Manual kubectl apply for ArgoCD Application
+You currently have to run:
+
+bash
+Copy
+Edit
+kubectl apply -f k8s/dev/fonapp-argocd-app.yaml -n argocd
+That’s fine if you do it once and the file lives in Git. But for fully automated GitOps, many teams:
+
+Use App of Apps pattern (bootstrap a root app).
+
+Or commit the Application manifest in a bootstrap repo ArgoCD already tracks.
+
+Verdict: Fine as-is, but could be more automated.
+
+✅ Final Verdict: Is Your Workflow Aligned with Best Practices?
+Feature	Status	Comment
+ArgoCD auto-sync	✅	Declared in fonapp-argocd-app.yaml
+GitOps (manifests in Git)	✅	All k8s files are Git-tracked
+Manual kubectl apply of Application	⚠️	OK for bootstrap, but could be automated
+ArgoCD webhook integration	❌	Not yet added
+argocd app sync via CLI	❌	Not used
+Empty commit workaround	✅ Removed	✅ Good
+
+✅ What You Can Add to Improve
+🔁 Option 1: Add ArgoCD Webhook
+In your GitHub repo settings:
+
+Go to Settings > Webhooks > Add Webhook
+
+Payload URL: https://argocd.<your-domain>/api/webhook
+
+Content type: application/json
+
+Secret: Optional
+
+Trigger: Just push events
+
+💡 You must expose ArgoCD (argocd-server) via Ingress and use TLS.
+
+🔁 Option 2: Add CLI Sync Step to Workflow
+If webhook isn’t feasible yet, you can do:
+
+yaml
+Copy
+Edit
+- name: Sync ArgoCD App
+  run: |
+    argocd login argocd.example.com --username admin --password ${{ secrets.ARGOCD_PASSWORD }} --insecure
+    argocd app sync fonapp
+✅ Summary
+Task	Done?	Recommendation
+CI/CD pipeline for scan + infra + deployment	✅	Well implemented
+Empty commit workaround removed	✅	👍
+ArgoCD auto-sync enabled	✅	👍
+Application manifest manually applied	✅	Acceptable (optional to automate)
+ArgoCD webhook or sync trigger	❌	Add for real-time automation
+
+k8s/
+├── bootstrap/
+│   ├── root-app-dev.yaml     # Bootstraps all dev ArgoCD apps
+│   └── root-app-prod.yaml    # Bootstraps all prod ArgoCD apps
+├── apps/
+│   ├── dev/
+│   │   ├── web-app.yaml
+│   │   ├── payment-app.yaml
+│   │   └── token-app.yaml
+│   └── prod/
+│       ├── web-app.yaml
+│       ├── payment-app.yaml
+│       └── token-app.yaml
+├── web-app/
+│   ├── dev/
+│   │   ├── deployment.yaml/nmmn  /
+│   │   ├── service.yaml
+│   │   └── ingress.yaml
+│   └── prod/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       └── ingress.yaml
+├── payment-app/
+│   ├── dev/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── ingress.yaml
+│   └── prod/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       └── ingress.yaml
+└── token-app/
+    ├── dev/
+    │   ├── deployment.yaml
+    │   ├── service.yaml
+    │   └── ingress.yaml
+    └── prod/
+        ├── deployment.yaml
+        ├── service.yaml
+        └── ingress.yaml

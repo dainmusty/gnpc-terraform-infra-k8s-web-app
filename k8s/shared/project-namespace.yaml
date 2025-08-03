@@ -1,3 +1,5 @@
+# k8s/shared/namespace.yaml
+
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -9,6 +11,4 @@ metadata:
     owner: dev-team
     tier: frontend
     version: v1.0.0
-
-
-# kubectl apply -f namespace.yml
+    argocd.argoproj.io/managed-by: argocd  # Helps ArgoCD track and manage this namespace
