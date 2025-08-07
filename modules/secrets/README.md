@@ -1,16 +1,3 @@
-# Terraform essential commands and notes
-terraform init
-
-terraform plan
-
-terraform apply --auto-approve
-
-terraform destroy --auto-approve
-
-terraform reconfigure
-
-
-
 # you can use the codes below to create your passwords in parameter store
 eg. 1 db_user
 # modules/ssm/main.tf
@@ -31,7 +18,7 @@ resource "aws_ssm_parameter" "grafana_admin_password" {
 }
 This exposes your actual password. create your password in parameter store in the console and put the value there before terraform apply
 
-# Once the created, you can use data to retrieve your passwords
+# Once created, you can use data to retrieve your passwords
 # Data sources for EKS cluster info
 
 data "aws_eks_cluster" "eks" {

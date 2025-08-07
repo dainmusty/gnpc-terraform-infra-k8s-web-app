@@ -1,3 +1,25 @@
+Repo Structure for ArgoCD
+gnpc-terraform-infra-k8s-web-app/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yaml                  # GitHub Actions workflow
+│
+├── k8s/
+│   ├── fonapp/                      # This is the path ArgoCD needs to see
+│   │   ├── frontend.yml             # Frontend deployment + service
+│   │   ├── backend.yml              # Backend deployment + service
+│   │   └── ingress.yml              # Ingress definition
+│
+│   └── dev/
+│       └── fonapp-argocd-app.yaml   # ArgoCD Application YAML (declares the app)
+│
+├── terraform/
+│   └── ...                          # Your infra code if any
+│
+├── README.md
+└── other files...
+
 # Terraform essential commands and notes
 terraform init
 
@@ -8,494 +30,300 @@ terraform apply --auto-approve
 terraform destroy --auto-approve
 
 terraform reconfigure
+# 📘 Production-Ready Grafana & Prometheus Setup with Secure Secrets and Alerting
 
-# Phase 1: Cluster only
-1. terraform plan -target=module.eks.aws_cloudformation_stack.eks_cluster_stack
+This document outlines the modular setup and best practices applied in configuring Grafana and Prometheus using Terraform, Helm, and Kubernetes for a secure and maintainable observability stack.
 
-2. terraform apply -target=module.eks.aws_cloudformation_stack.eks_cluster_stack --auto-approve
+---
 
-3. aws eks update-kubeconfig --region us-east-1 --name effulgencetech-dev
+## 🟩 1. `grafana-admin` Secret Handling Module
 
-AmazonEKSLoadBalancingPolicy
-aws iam delete-instance-profile --instance-profile-name GNPC-dev-admin-instance-profile
-GNPC-dev-admin-instance-profile
+### ✅ Before
+- Used an `initContainer` with `amazonlinux` and `aws-cli` to fetch secrets at runtime.
+- Embedded IAM dependencies and runtime logic, increasing security risks.
 
-# Phase 2: Everything else
-3. terraform apply --auto-approve
+### ✅ Now (Best Practice)
+- Terraform reads secrets from AWS Secrets Manager.
+- Creates a Kubernetes `Secret` (`grafana-admin`) with keys: `admin-user`, `admin-password`.
+- Helm references the secret using `admin.existingSecret`.
 
-# Delete All
-4. terraform destroy --auto-approve
+```yaml
+grafana:
+  admin:
+    existingSecret: grafana-admin
+```
 
-5. terraform destroy -target=module.iam --auto-approve
+### ✅ Benefits
+- 🔐 Secure: No AWS CLI or IAM dependency inside the pod.
+- 🧹 Simplified deployment with fewer runtime risks.
+- 📦 Helm-standard way of injecting secrets.
 
-# Testing
-5. aws eks update-kubeconfig --region us-east-1 --name effulgencetech-dev
+---
 
-# argocd
-# list all pods in argocd namespace
-1. kubectl get pods -n argocd
+## 🟨 2. Alertmanager Slack Notification Module
 
-# To check argocd on the web locally
-2. kubectl port-forward svc/argocd-server -n argocd 8080:80
+### ✅ Improvements
+- Terraform reads the Slack webhook from AWS Secrets Manager:
+```hcl
+data "aws_secretsmanager_secret_version" "slack_webhook" {
+  secret_id = var.slack_webhook_secret_id
+}
+```
 
-# run this to expose argo as an alb
-2. kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-using Ingress + ALB Controller instead — which is more secure and scalable.
+- Creates a Kubernetes Secret for Alertmanager with the correct key `slack_api_url`.
+
+### ✅ Benefits
+- 📫 Reliable Slack alerting.
+- 🔒 Secure handling of secrets at deploy time, not runtime.
+
+---
+
+## 🟦 3. Grafana Helm Release Module
+
+### ✅ Enhancements
+```yaml
+grafana:
+  serviceAccount:
+    create: false
+    name: grafana
+
+  service:
+    type: LoadBalancer
+
+  admin:
+    existingSecret: grafana-admin
+
+  grafana.ini:
+    auth.anonymous:
+      enabled: false
+
+  serviceMonitor:
+    enabled: true
+```
+
+### ✅ Benefits
+- 🔐 Authentication enforced.
+- 📡 Metrics available to Prometheus.
+- 📊 Better production readiness.
+
+---
+
+## 🟧 4. Kubernetes Resource Requests Module
+
+```yaml
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+```
+
+### ✅ Why it Matters
+- 🚦 Ensures stability and fair resource usage in Kubernetes.
+
+---
+
+## 🟥 5. Persistence Volume Module
+
+```yaml
+persistence:
+  enabled: true
+  storageClassName: gp2
+  size: 5Gi
+```
+
+### ✅ Benefits
+- 💾 Dashboards and configurations survive restarts.
+- 🧠 Stateful Grafana setup.
+
+---
+
+## 🟪 6. Optional Enhancements
+
+| Enhancement                      | Purpose                                 | Benefit                         |
+|----------------------------------|-----------------------------------------|----------------------------------|
+| Make admin username configurable | Pull from secret instead of hardcoding | Reusable across environments    |
+| Add disk, pod, RDS alerts        | Extend Prometheus alert coverage       | Full observability              |
+| Add pre-built dashboards         | Automatically load dashboards          | Fast operational insights       |
+
+---
+
+## 🧠 Summary
+
+✅ Secure Secrets (Grafana + Alertmanager)  
+✅ Best Practice Helm Usage (`existingSecret`)  
+✅ Scalable, Production-Ready Config  
+✅ Minimal Runtime Dependencies
+
+## 📘 Additional Operational Notes
+
+### 🏗️ Terraform Workflow (Two-Phase)
+**Phase 1: Cluster Only**
+```bash
+terraform plan -target=module.eks.aws_cloudformation_stack.eks_cluster_stack
+terraform apply -target=module.eks.aws_cloudformation_stack.eks_cluster_stack --auto-approve
+aws eks update-kubeconfig --region us-east-1 --name effulgencetech-dev
+```
+
+**Phase 2: All Resources**
+```bash
+terraform apply --auto-approve
+```
+
+**Delete Resources**
+```bash
+terraform destroy --auto-approve
+terraform destroy -target=module.iam --auto-approve
+```
+
+**Testing Cluster Access**
+```bash
+aws eks update-kubeconfig --region us-east-1 --name effulgencetech-dev
+```
+
+---
+
+### 🚀 ArgoCD Access and Management
+
+**Check ArgoCD Pods**
+```bash
+kubectl get pods -n argocd
+```
+
+**Port-forward for Local Access**
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:80
+```
+
+**Expose ArgoCD via ALB**
+```bash
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 kubectl expose deployment argocd-server --type=LoadBalancer --name=argocd-server --port=80 --target-port=8080 -n argocd
+kubectl get ingress -n argocd
+```
 
+**Initial Admin Password**
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
 
-# To check argocd on the web externally; copy and paste alb dns in browser
-4. kubectl get ingress -n argocd
+---
 
+### 📊 Grafana & Prometheus Access
 
-# to get argocd passwd
-1. export ARGOCD_SERVER='kubectl get svc argocd-server -n argocd -o json | jq - raw-output '.status.loadBalancer.ingress[0].hostname''
-admin
-2. export ARGO_PWD='kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d' echo $ARGO_PWD
-
-3. kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-a7VW0a29v8HRC5ky
-
-
-# to access grafana locally
+**Port-forward Grafana**
+```bash
 kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+```
 
-
-# to access prometheus locally
+**Port-forward Prometheus**
+```bash
 kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090
+```
 
-# Troubleshooting
-5. aws eks describe-cluster --name effulgencetech-dev --region us-east-1
+**Grafana Troubleshooting**
+```bash
+kubectl get pods -n monitoring
+kubectl get svc -n monitoring
+kubectl get secret grafana-admin -n monitoring -o yaml
+helm get all kube-prometheus-stack -n monitoring
+```
 
-# troubleshoot grafana
-1. kubectl get pods -n monitoring
-2. kubectl get svc -n monitoring
+---
 
-1. kubectl get secret grafana-admin -n monitoring -o yaml
-2. kubectl get storageclass
-3. helm get all kube-prometheus-stack -n monitoring
-
-
-kubectl annotate serviceaccount -n kube-system aws-load-balancer-controller eks.amazonaws.com/role-arn=arn:aws:iam::151706774:role/eks-alb-controller-irsa
-
-{  "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Principal": {
-          "Federated": "arn:aws:iam::151706774:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/var.oidc_provider_arn"
-        },
-        "Action": "sts:AssumeRoleWithWebIdentity",
-        "Condition": {
-          "StringEquals": {
-            "oidc.eks.us-east-1.amazonaws.com/id/var.oidc_provider_arn:sub": "system:serviceaccount:kube-system:alb_controller",
-            "oidc.eks.us-east-1.amazonaws.com/id/var.oidc_provider_arn:aud": "sts.amazonaws.com"
-          }
+### ⚙️ AWS Load Balancer Controller IRSA Example
+IAM trust policy:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/<OIDC_ID>"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.us-east-1.amazonaws.com/id/<OIDC_ID>:sub": "system:serviceaccount:kube-system:alb_controller",
+          "oidc.eks.us-east-1.amazonaws.com/id/<OIDC_ID>:aud": "sts.amazonaws.com"
         }
       }
-    ]
-  }
-
-
-Supported Kubernetes versions¶
-AWS Load Balancer Controller v2.0.0~v2.1.3 requires Kubernetes 1.15+
-AWS Load Balancer Controller v2.2.0~v2.3.1 requires Kubernetes 1.16-1.21
-AWS Load Balancer Controller v2.4.0+ requires Kubernetes 1.19+
-AWS Load Balancer Controller v2.5.0+ requires Kubernetes 1.22+
-4. Access ArgoCD Web UI
-You deployed ArgoCD via Helm, which also exposes a LoadBalancer by default (unless overridden).
-
-🔍 Check ArgoCD Service:
- 
-1. kubectl get svc -n argocd argocd-server
-2. kubectl describe svc -n argocd argocd-server
-
-✅ Output Example:
- NAME           TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)
-argocd-server  LoadBalancer   10.0.45.108     54.91.180.20    80:30123/TCP
-🌐 Open in Browser: http://<EXTERNAL-IP>:80
-🔑 Login Credentials:
-Username: admin
-
-Initial Password: ArgoCD stores it as a secret named argocd-initial-admin-secret:
-
-kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode
-🧠 Tip:
-If EXTERNAL-IP is <pending> for a while:
-Your LoadBalancer (ELB) might not have been provisioned yet.
-Make sure you're using a VPC/subnets that support AWS LoadBalancers (usually public subnets with mapPublicIpOnLaunch = true and proper tags).
-
-
-# To check prometheus on the web locally
-kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80
-
-<!-- terraform apply --auto-approve -target=aws_cloudformation_stack.eks_cluster_stack
-terraform destroy --auto-approve -target=aws_cloudformation_stack.eks_cluster_stack --> -->
-
-To investigate why Helm release failed:
-Use the helm CLI:
-
-bash
-Copy
-Edit
-helm list -n argocd
-helm status argocd -n argocd
-And for Prometheus:
-
-bash
-Copy
-Edit
-helm list -n monitoring
-helm status kube-prometheus-stack -n monitoring
-Also check the pods:
-
-bash
-Copy
-Edit
-kubectl get pods -n argocd
-kubectl get pods -n monitoring
-If some are stuck in CrashLoopBackOff or Pending, describe the pod:
-
-bash
-Copy
-Edit
-kubectl describe pod <pod-name> -n <namespace>
-✅ Next steps:
-1. Check ALB controller is working
-bash
-Copy
-Edit
-kubectl get pods -n kube-system | grep alb
-Make sure it’s running. If not:
-
-bash
-Copy
-Edit
-kubectl logs -n kube-system <alb-pod-name>
-2. Check Service Type
-Make sure your Helm values for ArgoCD, Prometheus, and Grafana set the type to LoadBalancer:
-
-hcl
-Copy
-Edit
-set {
-  name  = "server.service.type"
-  value = "LoadBalancer"
+    }
+  ]
 }
-For Prometheus and Grafana:
+```
 
-hcl
-Copy
-Edit
-set {
-  name  = "grafana.service.type"
-  value = "LoadBalancer"
-}
-3. Check LoadBalancers
-bash
-Copy
-Edit
-kubectl get svc -A | grep LoadBalancer
-See if any services have an external IP. If not, your ALB controller isn’t working right.
+---
 
-4. Confirm IAM role permissions
-Ensure the IAM role associated with the ALB controller has the correct policy and that the service account is properly annotated.
+### 📦 TFLint Best Practices
 
-TL;DR:
-kubectl port-forward is temporary and local — it doesn’t mean the LoadBalancer is working.
-
-Your ALB LoadBalancers aren’t being provisioned properly — check ALB controller, IAM, and Helm values.
-
-Use kubectl get svc -A | grep grafana and port-forward Grafana if needed for now.
-
-Use helm status and kubectl logs to diagnose Helm release failures.
-
-Let me know what you get from kubectl get svc -A | grep LoadBalancer and I’ll help you sort out why the LoadBalancers aren’t coming up.
-
-kubectl exec -n kube-system aws-load-balancer-controller-9546df94b-46fdj -- curl -I https://sts.us-east-1.amazonaws.com
-
- aws-load-balancer-controller-9546df94b-46fdj
-
-
-terraform/
-├── modules/
-│   ├── rds/
-│   ├── ssm/
-│   └── ...
-├── envs/
-│   ├── dev/
-│   │   ├── main.tf
-│   │   ├── data.tf      ← All data lookups (like SSM)
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-
-
-# Tflint
-TFLint ruleset plugin for Terraform AWS Provider
-
-This ruleset focus on possible errors and best practices about AWS resources. Many rules are enabled by default and warn against code that might fail when running terraform apply, or clearly unrecommened.
-
-# Installation
-You can install the plugin by adding a config to .tflint.hcl and running tflint --init:
-
-# Installation
-1. Run the command for your OS
-Bash script (Linux):
+**Install TFLint**
+```bash
+# Linux
 curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
 
-Homebrew (macOS):
+# macOS
 brew install tflint
 
-Chocolatey (Windows):
+# Windows
 choco install tflint
+```
 
-# Enable plugin
-1. vi into a file and call it .tflint.hcl
-2. paste the plugin details, save and quit
+**Enable AWS Plugin**
+`.tflint.hcl`:
+```hcl
 plugin "aws" {
-    enabled = true
-    version = "0.39.0"
-    source  = "github.com/terraform-linters/tflint-ruleset-aws"
+  enabled = true
+  version = "0.39.0"
+  source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
-3. run tflint --init
-It should return the output below
-Installing "aws" plugin...
-Installed "aws" (source: github.com/terraform-linters/tflint-ruleset-aws, version: 0.39.0) # the version will depend on the version you installed.
+```
+Then run:
+```bash
+tflint --init
+```
 
+---
 
-# iam principal variables
-Value	Use Case
-["ec2.amazonaws.com"]	Standard EKS worker nodes (EC2 instances)
-["ssm.amazonaws.com"]	SSM-managed nodes or hybrid scenarios
-["eks.amazonaws.com"]	Rare, for EKS service itself
-["ec2.amazonaws.com", ...]	Multiple services (advanced use cases)
+### 🔐 IAM Principal Use Cases
 
+| Value                          | Use Case                         |
+|-------------------------------|----------------------------------|
+| ["ec2.amazonaws.com"]         | Standard EKS worker nodes        |
+| ["ssm.amazonaws.com"]         | SSM-managed nodes                |
+| ["eks.amazonaws.com"]         | EKS service (rare)               |
+| ["ec2.amazonaws.com", ...]    | Advanced multi-service scenarios |
 
-and the value for the permission boundary null means it is applied right?
+**Permissions Boundary**
+- `null` = No permission boundary
+- `"arn:..."` = Explicitly applied boundary
 
-GitHub Copilot
-No, setting the permission boundary variable to null means no permission boundary will be applied to the IAM role.
+---
 
-How it works:
+### ❗ Terraform Variable Errors and Best Practices
 
-If you set permissions_boundary = null (or simply omit the argument), Terraform will not add a permissions boundary to the role.
-If you set permissions_boundary = "arn:aws:iam::123456789012:policy/your-permission-boundary", then that boundary will be applied.
-Summary:
+**Common Error**
+```text
+Error: The root module input variable "region"/"cluster_name" is not set
+```
 
-null = No permission boundary is attached.
-"arn:aws:iam::...:policy/..." = That permission boundary is attached.
-If you want the permission boundary to be enforced, provide its ARN as the value. If you want no boundary, use null.
+**Root Cause**
+- Declaring variables in child modules doesn't propagate values to the root.
+- You must define or pass these variables explicitly in the root module.
 
+**Solution Options**
+1. Set default values in `variables.tf` in the root module.
+2. Pass variables with `-var` or a `.tfvars` file.
+3. Use `terraform.tfvars` or `main.tf` to supply inputs.
 
-Now, the next error you're encountering:
+**Best Practice for providers.tf**
+- Should be in the **root module**.
+- Child modules should not define providers, unless they need different configurations.
 
-vbnet
-Copy
-Edit
-Error: failed to get shared config profile, default
-means that Terraform is trying to use an AWS CLI profile named default, but it's either not configured or not available in the GitHub Actions runner environment.
-
-🔍 Why This Happens
-In your providers.tf, you likely have something like:
-
-h
-Copy
-Edit
-provider "aws" {
-  profile = "default" # ⛔ This line causes the issue in CI
-  region  = "us-east-1"
-}
-This profile = "default" assumes the presence of a shared AWS credentials profile named default in ~/.aws/credentials. That may work locally, but in GitHub Actions, AWS credentials are usually provided via environment variables like:
-
-bash
-Copy
-Edit
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-✅ How to Fix It
-✅ Option 1: Remove profile entirely (recommended for CI)
-Update your providers.tf like this:
-
-hcl
-Copy
-Edit
-provider "aws" {
-  region = "us-east-1"
-}
-When no profile is specified, the AWS provider will automatically use environment variables — which GitHub Actions sets from:
-
-yaml
-Copy
-Edit
-- name: Configure AWS Credentials
-  uses: aws-actions/configure-aws-credentials@v4
-  with:
-    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    aws-region: us-east-1
-🛠 Option 2: Pass a profile (not recommended in CI)
-If you insist on using profile, you'd need to also configure that profile manually in GitHub Actions — but it's not the standard practice in CI/CD.
-
-
-
-: variable "cluster_name" {
-│ 
-│ The root module input variable "cluster_name" is not set, and has no
-│ default value. Use a -var or -var-file command line argument to provide a
-│ value for this variable.
-╵
-╷
-│ Error: No value for required variable
-│ 
-│   on variables.tf line 7:
-│    7: variable "region" {
-│ 
-│ The root module input variable "region" is not set, and has no default
-│ value. Use a -var or -var-file command line argument to provide a value for
-│ this variable.
-╵
-Error: Terraform exited with code 1.
-Error: Process completed with exit code 1.
-
-i have variables in my providers.tf whose variables have not been provided in the main.tf in the root module although those same variables (cluster_name and region) and their values have been provided in the eks module so i was thinking terraform would recognise that they are the same variables. 
-
-i have a question though, in terms of best practise, where is the best place to put the providers.tf, should it be in the root module or any of the child modules?
-
-for now, am thinking of providing the default values in the variables.tf, will that work?
-
-
-ChatGPT said:
-Great questions — let's break it down and address both the Terraform error and your architecture/best practice question around providers.tf and variable declarations.
-
-🔴 Error Explanation
-You're seeing this error:
-
-pgsql
-Copy
-Edit
-The root module input variable "cluster_name" is not set, and has no default value.
-That means:
-
-Terraform is evaluating the root module (env/dev or similar).
-
-The root module has a variables.tf that defines cluster_name and region but doesn't assign values.
-
-Even though these variables are passed into a child module (like module.eks), Terraform does NOT back-propagate variables from child modules to the root. That’s by design.
-
-✅ How to Fix It
-You have three options:
-
-Option 1: Pass -var or use a *.tfvars file
-Best for CI/CD workflows like GitHub Actions.
-
-In your GitHub Actions workflow:
-
-bash
-Copy
-Edit
-terraform apply -var="region=us-east-1" -var="cluster_name=effulgencetech-dev" --auto-approve
-Or use a terraform.tfvars file:
-
-hcl
-Copy
-Edit
-# terraform.tfvars
-region = "us-east-1"
-cluster_name = "effulgencetech-dev"
-And just run:
-
-bash
-Copy
-Edit
-terraform apply --auto-approve
-Option 2: Set default values in variables.tf
-Best for quick development/testing, not always ideal for production.
-
-In variables.tf:
-
-hcl
-Copy
-Edit
-variable "region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "cluster_name" {
-  description = "EKS cluster name"
-  type        = string
-  default     = "effulgencetech-dev"
-}
-✅ Yes, this will fix the error.
-⚠️ Just be cautious — using default can lead to accidental deployments to wrong regions or naming conflicts.
-
-Option 3: Reference values in your terraform.tfvars or your CI/CD pipeline (best practice)
-In production or shared environments, explicitly set these in a .tfvars file or pass them via CI/CD to avoid unexpected values.
-
-📦 Best Practice: Where to Put providers.tf?
-✅ Best Practice: Always define provider blocks in the root module.
-
-Why:
-
-Terraform only configures providers from the root module.
-
-You can’t define a top-level provider in a child module and expect it to work automatically.
-
-Child modules can declare provider aliases, but those aliases must be configured in the root.
-
-So:
-
-h
-Copy
-Edit
-# ✅ GOOD: Root-level providers.tf
-provider "aws" {
-  region = var.region
-}
-Then in the child module:
-
-hcl
-Copy
-Edit
-module "eks" {
-  source       = "../modules/eks"
-  region       = var.region
-  cluster_name = var.cluster_name
-}
-And optionally in the child module, if you're doing multi-provider setup:
-
-hcl
-Copy
-Edit
-provider "aws" {
-  alias  = "this"
-  region = var.region
-}
-Then the root passes it in like:
-
-h
-Copy
-Edit
-module "eks" {
-  source  = "../modules/eks"
-  providers = {
-    aws = aws.this
-  }
-  ...
-}
-✅ Summary
-Concern	Best Practice
-Variable error	Declare or pass cluster_name and region in the root module via defaults, -var, or .tfvars.
-Providers	Always put providers.tf in the root module only.
-Default values	Okay for development; avoid for production-critical values. Prefer explicit *.tfvars.
-
-Let me know if you'd like help templating your terraform.tfvars or updating the GitHub Actions step to pass these values dynamically.
-
-
-
-
-
+---
 
 
 

@@ -1,15 +1,3 @@
-# Terraform essential commands and notes
-terraform init
-
-terraform plan
-
-terraform apply --auto-approve
-
-terraform destroy --auto-approve
-
-terraform reconfigure
-
-
 # S3 Bucket Module
 
 This Terraform module creates an Amazon S3 bucket with optional versioning support.
@@ -32,7 +20,7 @@ This Terraform module creates an Amazon S3 bucket with optional versioning suppo
 
 ## Usage
 
-```hcl
+
 module "s3" {
   source            = "./modules/s3"
   bucket_name       = "my-s3-bucket-name"
@@ -101,8 +89,6 @@ module.s3.aws_s3_bucket.s3_bucket will be destroyed
 
 what is best practise? should i put the bucket policy in the s3 child or the iam child module?
 
-
-ChatGPT said:
 Best practice is to put the S3 bucket policy in the S3 (storage) child module, not the IAM module. Here’s why:
 
 ✅ Reasons to Put the Bucket Policy in the S3 Module
@@ -123,9 +109,7 @@ Makes your IAM module less portable and harder to test.
 ✅ Recommended Structure
 If your Terraform project has modules like:
 
-css
-Copy
-Edit
+
 modules/
   s3/
     main.tf        <-- include aws_s3_bucket and aws_s3_bucket_policy here

@@ -1,354 +1,154 @@
-# Terraform essential commands and notes
-terraform init
+# 🧩 EKS Addons Troubleshooting & Setup Summary
 
-terraform plan
+_August 6, 2025_
 
-terraform apply --auto-approve
+This document summarizes key issues encountered and resolutions applied while configuring the following Terraform-managed Kubernetes addons on an EKS cluster:
 
-terraform destroy --auto-approve
+- `argocd.tf`
+- `ebs-csi-driver.tf`
+- `alb-controller.tf`
+- `prometheus-grafana.tf`
 
-terraform reconfigure
+---
 
-#
-terraform apply -target=aws_eks_cluster.eks_cluster
+## 📦 1. ArgoCD Setup & Debugging
 
+**Issues:**  
+- Admin login password not obvious.  
+- UI access required port-forwarding.
 
-✅ Recommended Terraform Two-Step Plan (Best Practice)
-Step 1: Apply EKS Cluster + OIDC + IAM
+**Fixes:**  
+- Accessed dashboard via:
+  ```bash
+  kubectl port-forward svc/argocd-server -n argocd 8080:80
+  ```
+- Retrieved password with:
+  ```bash
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{{{{.data.password}}}}" | base64 -d
+  ```
+- Verified setup:
+  - `helm list -n argocd`
+  - `kubectl get svc -n argocd`
+  - `kubectl get pods -n argocd`
 
-Create the EKS cluster.
+---
 
-Wait for the data "aws_eks_cluster" to fetch the OIDC issuer.
+## 📊 2. Prometheus & Grafana Observability Stack
 
-Create the IAM OIDC provider.
+**Issues:**  
+- Manual port-forwarding needed.  
+- Default insecure credentials and config.  
+- Secrets were fetched at runtime using `aws-cli` in initContainers.
 
-Create any IAM roles and policies needed by the node group and addons.
+**Fixes:**  
+- Used Helm `existingSecret` for Grafana admin:
+  ```yaml
+  grafana:
+    admin:
+      existingSecret: grafana-admin
+  ```
+- Disabled anonymous access:
+  ```yaml
+  grafana.ini:
+    auth.anonymous:
+      enabled: false
+  ```
+- Enabled persistence and resource limits:
+  ```yaml
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 5Gi
 
-# run terraform apply -target=aws_eks_cluster.eks_cluster
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  ```
+- Enabled `serviceMonitor` for Prometheus to scrape Grafana.
 
-Step 2: Apply Node Group + Addons
+**Outcome:**  
+- 🔐 Secure access.  
+- 💾 Persistent dashboards.  
+- 📊 Prometheus can scrape Grafana metrics.
 
-Create the managed node group.
+---
 
-Attach IAM roles with proper trust relationships.
+## ☁️ 3. ALB Controller
 
-Install addons (vpc-cni, coredns, kube-proxy, etc).
-# run terraform apply
+**Checks Performed:**  
+- Verified LoadBalancer services:
+  ```bash
+  kubectl get svc -A | grep LoadBalancer
+  ```
+- Verified ALB controller logs and pods:
+  ```bash
+  kubectl get pods -n kube-system | grep alb
+  kubectl logs -n kube-system <alb-pod>
+  ```
 
+---
 
-✅ Summary
-What	Best Practice
-Cluster + OIDC	Terraform apply (Step 1)
-Nodegroup + Addons	Terraform apply (Step 2)
-CI/CD Strategy	Split into two steps in pipeline
-One-shot Deploy	Only possible via eksctl/CloudFormation
+## 🔩 4. EBS CSI Driver & EKS Connectivity
 
-# Generate a terraform plan and apply targeting only specified infrastructure:
-# terraform plan -target=aws_vpc.network -target=aws_efs_file_system.efs_setup
+**Tasks:**  
+- Connected to EKS cluster:
+  ```bash
+  aws eks --region us-east-1 update-kubeconfig --name <cluster>
+  kubectl get nodes
+  kubectl cluster-info
+  kubectl get ns argocd
+  ```
 
-# terraform apply -target=aws_vpc.network -target=aws_efs_file_system.efs_setup
+---
 
-aws eks update-kubeconfig --region us-east-1 --name effulgencetech-dev
+## 🔒 5. Secure Secrets & Alertmanager Slack Integration
 
+**Original Issue:**  
+- Runtime secret injection via `initContainer` and `aws-cli`.
 
-
-🔁 Option 1: Two-Phase Terraform Apply (Recommended for Simplicity)
-Step 1 – Apply only the EKS cluster:
-
-hcl
-Copy
-Edit
-resource "aws_eks_cluster" "eks_cluster" {
-  name     = var.cluster_name
-  role_arn = var.eks_cluster_role_arn
-  version  = "1.32"
-
-  vpc_config {
-    subnet_ids         = var.subnet_ids
-    security_group_ids = [var.cluster_security_group_id]
+**Fixes:**  
+- Fetched secrets via Terraform:
+  ```hcl
+  data "aws_secretsmanager_secret_version" "slack_webhook" {
+    secret_id = var.slack_webhook_secret_id
   }
+  ```
+- Created Kubernetes secret with `slack_api_url` key.
 
-  depends_on = [var.cluster_AmazonEKSClusterPolicy]
-}
-Then apply:
+**Outcome:**  
+- 🔐 Secure Slack alerting.  
+- ✅ Deployment-time secret resolution.
 
-bash
-Copy
-Edit
-terraform apply -target=aws_eks_cluster.eks_cluster
-Step 2 – Fetch OIDC URL and Add IAM Provider
+---
 
-After the EKS cluster is created, the OIDC URL becomes available. Then you can use:
+## 📘 6. Terraform Modularization
 
-hcl
-Copy
-Edit
-data "aws_eks_cluster" "eks" {
-  name = aws_eks_cluster.eks_cluster.name
-}
+**Improvements:**  
+- Moved alert rules to `prometheus_rules.tf`.  
+- Used modular `values = [ file(...) ]` pattern for Helm.
 
-resource "aws_iam_openid_connect_provider" "oidc" {
-  url             = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0a4d34e0d"]
-}
-Then run:
+---
 
-bash
-Copy
-Edit
-terraform apply
-🧠 Option 2: External Data Source (Automated)
-If you want a fully automated approach, you can use a null_resource or external data source to call an external script that fetches the thumbprint — but it’s more brittle and less readable. Here’s the idea in brief:
+## 🧠 Summary Table
 
-hcl
-Copy
-Edit
-data "external" "oidc_thumbprint" {
-  program = ["bash", "${path.module}/scripts/get_thumbprint.sh"]
-}
-But this is generally discouraged for maintainability. Stick with Option 1 unless you're automating across multiple accounts.
-
-🧼 Recommendation Recap
-✅ Use two-phase apply to first create the cluster, then create the OIDC provider and node groups.
-
-✅ Use hardcoded thumbprint (9e99a48a9960b14926bb7f3b02e22da0a4d34e0d) only if you're using AWS's default Root CA (which EKS does).
-
-🚫 Avoid trying to create aws_iam_openid_connect_provider before the cluster.
-
-If you'd like, I can help refactor your Terraform into a clean two-phase structure and show you how to script both phases with minimal changes.
+| Component              | Status & Outcome                                                     |
+|------------------------|----------------------------------------------------------------------|
+| ArgoCD                 | Admin access fixed, deployment vaalidated                            |
+| Grafana/Prometheus     | Secrets secured, persistence added, alerting improved               |
+| ALB Controller         | Logs and service verified                                            |
+| EBS CSI Driver         | Cluster connectivity confirmed                                       |
+| Alertmanager Slack     | Secrets pulled securely, runtime dependencies removed               |
+| Terraform Structure    | Modular, maintainable setup aligned with best practices             |
 
 
-
-
-
-
-You said:
-what is AWS Root CA?
-
-
-ChatGPT said:
 The AWS Root CA is a Certificate Authority (CA) that Amazon Web Services uses to secure communication between services — like when your EKS cluster uses OIDC (OpenID Connect) to communicate securely with IAM and other services.
 
 🛡️ What is a Root CA?
 A Root Certificate Authority is a trusted entity that issues digital certificates. These certificates are used to establish secure (TLS/SSL) connections. In AWS, the OIDC provider your EKS cluster uses must be trusted, so its certificate needs to be verified — this is where the Root CA’s thumbprint comes in.
-
-📦 In the context of EKS + OIDC
-When you enable OIDC on your EKS cluster:
-
-The cluster uses a public OIDC issuer like:
-https://oidc.eks.us-east-1.amazonaws.com/id/EXAMPLE
-
-This URL is backed by an SSL certificate.
-
-The Root CA for that certificate is Amazon Trust Services.
-
-✅ Therefore, when creating an aws_iam_openid_connect_provider in Terraform, AWS wants to ensure the OIDC issuer is trusted by checking the SHA1 thumbprint of the Root CA.
-
-✅ Common Thumbprint for AWS OIDC (Amazon Root CA 1)
-Most EKS clusters use this one:
-
-Copy
-Edit
-9e99a48a9960b14926bb7f3b02e22da0a4d34e0d
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
-  type        = string
-}
-
-variable "kubernetes_version" {
-  description = "Kubernetes version to use for the cluster"
-  type        = string
-  default     = "1.29"
-}
-
-variable "vpc_id" {
-  description = "VPC ID for the EKS cluster"
-  type        = string
-}
-
-variable "subnet_ids" {
-  description = "List of subnet IDs for EKS nodes"
-  type        = list(string)
-}
-
-variable "node_group_config" {
-  description = "Map of node group configurations"
-  type = map(object({
-    instance_types  = list(string)
-    desired_size    = number
-    min_size        = number
-    max_size        = number
-    capacity_type   = string # ON_DEMAND or SPOT
-  }))
-}
-
-variable "eks_role_arn" {
-  description = "IAM role ARN for the EKS control plane"
-  type        = string
-}
-
-variable "node_role_arn" {
-  description = "IAM role ARN for the EKS worker nodes"
-  type        = string
-}
-
-variable "tags" {
-  description = "Tags to apply to all resources"
-  type        = map(string)
-  default     = {}
-}
-
-
-main.tf
-resource "aws_eks_cluster" "this" {
-  name     = var.cluster_name
-  version  = var.kubernetes_version
-  role_arn = var.eks_role_arn
-
-  vpc_config {
-    subnet_ids = var.subnet_ids
-  }
-
-  tags = merge(var.tags, {
-    Name = var.cluster_name
-  })
-}
-
-resource "aws_eks_node_group" "this" {
-  for_each = var.node_group_config
-
-  cluster_name    = aws_eks_cluster.this.name
-  node_group_name = "${var.cluster_name}-${each.key}"
-  node_role_arn   = var.node_role_arn
-  subnet_ids      = var.subnet_ids
-
-  scaling_config {
-    desired_size = each.value.desired_size
-    min_size     = each.value.min_size
-    max_size     = each.value.max_size
-  }
-
-  instance_types = each.value.instance_types
-  capacity_type  = each.value.capacity_type
-
-  depends_on = [aws_eks_cluster.this]
-
-  tags = merge(var.tags, {
-    Name = "${var.cluster_name}-${each.key}"
-  })
-}
-
-
-outputs.tf
-output "cluster_name" {
-  value = aws_eks_cluster.this.name
-}
-
-output "cluster_endpoint" {
-  value = aws_eks_cluster.this.endpoint
-}
-
-output "kubeconfig" {
-  value = jsonencode({
-    apiVersion = "v1"
-    clusters = [{
-      cluster = {
-        server                   = aws_eks_cluster.this.endpoint
-        "certificate-authority-data" = aws_eks_cluster.this.certificate_authority[0].data
-      }
-      name = aws_eks_cluster.this.name
-    }]
-    contexts = [{
-      context = {
-        cluster = aws_eks_cluster.this.name
-        user    = "aws"
-      }
-      name = aws_eks_cluster.this.name
-    }]
-    current-context = aws_eks_cluster.this.name
-    kind            = "Config"
-    preferences     = {}
-    users = [{
-      name = "aws"
-      user = {}
-    }]
-  })
-}
-
-output "node_group_names" {
-  value = [for ng in aws_eks_node_group.this : ng.node_group_name]
-}
-
-
-root module call
-module "eks" {
-  source = "./modules/eks"
-
-  cluster_name       = "myapp-eks"
-  kubernetes_version = "1.29"
-  vpc_id             = module.vpc.vpc_id
-  subnet_ids         = module.vpc.private_subnets
-
-  eks_role_arn       = module.iam.eks_cluster_role_arn
-  node_role_arn      = module.iam.eks_node_role_arn
-
-  node_group_config = {
-    ng1 = {
-      instance_types = ["t3.medium"]
-      desired_size   = 2
-      min_size       = 1
-      max_size       = 3
-      capacity_type  = "ON_DEMAND"
-    }
-  }
-
-  tags = {
-    Environment = "dev"
-    Project     = "myapp"
-  }
-}
-
-
-# configmap setup
-resource "null_resource" "apply_aws_auth" {
-  provisioner "local-exec" {
-    command = <<EOF
-      aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.this.name}
-      kubectl apply -f ${path.module}/manifests/aws-auth.yaml
-    EOF
-  }
-
-  depends_on = [aws_eks_node_group.this]
-}
-
-
-// Ensure the aws-auth ConfigMap is applied separately using kubectl or Terraform Kubernetes provider.
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-
-}
-
 
 
 
@@ -416,78 +216,7 @@ variable "subnet_ids" {
   type = list(string)
 }
 
-
-module "eks" {
-  source         = "../../modules/eks"
-  cluster_name   = "effulgencetech-dev"
-  node_group_name = "dev-nodegroup"
-  instance_type  = "t2.medium"   
-  desired_nodes  = 2
-  min_nodes      = 1
-  max_nodes      = 3
-  subnet_ids     = module.vpc.vpc_private_subnets
-  eks_cluster_role_arn = module.iam.eks_cluster_role_arn
-  eks_node_role_arn = module.iam.eks_node_role_arn
-  cluster_AmazonEKSClusterPolicy = module.iam.cluster_AmazonEKSClusterPolicy
-  node_AmazonEC2ContainerRegistryReadOnly = module.iam.node_AmazonEC2ContainerRegistryReadOnly
-  node_AmazonEKS_CNI_Policy = module.iam.node_AmazonEKS_CNI_Policy
-  node_AmazonEKSWorkerNodePolicy = module.iam.node_AmazonEKSWorkerNodePolicy
-
-}
-
-
-# final copy eks setup
-
-can you give me the equivalent terraform code for the eksctl code below because the eksctl is able to create the cluster and the nodegroup successfully but the terraform code does not. see below the two codes
-
-eksctl
-eksctl create cluster --name effulgencetech-dev --region us-east-1 --nodegroup-name et-nodegroup --node-type t2.medium --nodes 2 --nodes-min 1 --nodes-max 3 --managed
-2025-06-14 16:08:17 [ℹ]  eksctl version 0.207.0
-2025-06-14 16:08:17 [ℹ]  using region us-east-1
-2025-06-14 16:08:19 [ℹ]  setting availability zones to [us-east-1b us-east-1d]
-2025-06-14 16:08:19 [ℹ]  subnets for us-east-1b - public:192.168.0.0/19 private:192.168.64.0/19
-2025-06-14 16:08:19 [ℹ]  subnets for us-east-1d - public:192.168.32.0/19 private:192.168.96.0/19
-2025-06-14 16:08:19 [ℹ]  nodegroup "et-nodegroup" will use "" [AmazonLinux2/1.32]
-2025-06-14 16:08:19 [ℹ]  using Kubernetes version 1.32
-2025-06-14 16:08:19 [ℹ]  creating EKS cluster "effulgencetech-dev" in "us-east-1" region with managed nodes
-2025-06-14 16:08:19 [ℹ]  will create 2 separate CloudFormation stacks for cluster itself and the initial managed nodegroup
-2025-06-14 16:08:19 [ℹ]  if you encounter any issues, check CloudFormation console or try 'eksctl utils describe-stacks --region=us-east-1 --cluster=effulgencetech-dev'
-2025-06-14 16:08:19 [ℹ]  Kubernetes API endpoint access will use default of {publicAccess=true, privateAccess=false} for cluster "effulgencetech-dev" in "us-east-1"
-2025-06-14 16:08:19 [ℹ]  CloudWatch logging will not be enabled for cluster "effulgencetech-dev" in "us-east-1"
-2025-06-14 16:08:19 [ℹ]  you can enable it with 'eksctl utils update-cluster-logging --enable-types={SPECIFY-YOUR-LOG-TYPES-HERE (e.g. all)} --region=us-east-1 --cluster=effulgencetech-dev'
-2025-06-14 16:08:19 [ℹ]  default addons kube-proxy, coredns, metrics-server, vpc-cni were not specified, will install them as EKS addons
-2025-06-14 16:08:19 [ℹ]
-2 sequential tasks: { create cluster control plane "effulgencetech-dev",
-    2 sequential sub-tasks: {
-        2 sequential sub-tasks: {
-            1 task: { create addons },
-            wait for control plane to become ready,
-        },
-        create managed nodegroup "et-nodegroup",
-    }
-}
-2025-06-14 16:08:19 [ℹ]  building cluster stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:08:21 [ℹ]  deploying stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:08:51 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:09:40 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:10:42 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:11:43 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:12:49 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:13:50 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:14:52 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:15:56 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:16:58 [ℹ]  waiting for CloudFormation stack "eksctl-effulgencetech-dev-cluster"
-2025-06-14 16:17:05 [ℹ]  creating addon: kube-proxy
-2025-06-14 16:17:05 [ℹ]  successfully created addon: kube-proxy
-2025-06-14 16:17:06 [ℹ]  creating addon: coredns
-2025-06-14 16:17:07 [ℹ]  successfully created addon: coredns
-2025-06-14 16:17:08 [ℹ]  creating addon: metrics-server
-2025-06-14 16:17:08 [ℹ]  successfully created addon: metrics-server
-2025-06-14 16:17:09 [!]  recommended policies were found for "vpc-cni" addon, but since OIDC is disabled on the cluster, eksctl cannot configure the requested permissions; the recommended way to provide IAM permissions for "vpc-cni" addon is via pod identity associations; after addon creation is completed, add all recommended policies to the config file, under addon.PodIdentityAssociations, and run eksctl update addon
-2025-06-14 16:17:09 [ℹ]  creating addon: vpc-cni
-2025-06-14 16:17:10 [ℹ]  successfully created addon: vpc-cni
-
-terraform eks cluster code
+# terraform eks cluster code
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.cluster_name
   role_arn = var.eks_cluster_role_arn
@@ -499,8 +228,6 @@ resource "aws_eks_cluster" "eks_cluster" {
 
   depends_on = [var.cluster_AmazonEKSClusterPolicy]
 }
-
-
 
 resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
@@ -530,7 +257,7 @@ resource "aws_eks_node_group" "eks_node_group" {
 } 
 
 
-ChatGPT said:
+
 Updated saved memory
 Thanks for the detailed comparison. Your eksctl command creates a fully working cluster because it:
 
@@ -546,9 +273,7 @@ Your Terraform setup is missing key features, especially the EKS addons, OIDC, a
 
 ✅ Terraform Code (Equivalent to eksctl)
 1. EKS Cluster
-hcl
-Copy
-Edit
+
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.cluster_name
   role_arn = var.eks_cluster_role_arn
@@ -566,9 +291,7 @@ resource "aws_eks_cluster" "eks_cluster" {
   ]
 }
 2. OIDC Provider
-hcl
-Copy
-Edit
+
 data "aws_eks_cluster" "eks" {
   name = aws_eks_cluster.eks_cluster.name
 }
@@ -585,9 +308,7 @@ resource "aws_iam_openid_connect_provider" "oidc" {
 Replace var.thumbprint with the correct thumbprint of the OIDC provider.
 
 3. Managed Node Group
-hcl
-Copy
-Edit
+
 resource "aws_eks_node_group" "eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
   node_group_name = "${var.env}-nodegroup"
@@ -610,10 +331,8 @@ resource "aws_eks_node_group" "eks_node_group" {
   ]
 }
 4. EKS Addons (CoreDNS, kube-proxy, VPC CNI, metrics-server)
-hcl
-Copy
-Edit
-resource "aws_eks_addon" "vpc_cni" {
+
+resource "aws_eks_addon" "vpc_cni" {				# This is required for the creation of the node group.
   cluster_name = aws_eks_cluster.eks_cluster.name
   addon_name   = "vpc-cni"
 }
@@ -635,9 +354,6 @@ resource "aws_eks_addon" "metrics_server" {
 🛠 Subnet Tagging Required by EKS
 You must tag your private subnets like this:
 
-hcl
-Copy
-Edit
 resource "aws_subnet" "private" {
   # ... your subnet config ...
   tags = {

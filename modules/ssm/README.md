@@ -1,16 +1,3 @@
-# Terraform essential commands and notes
-terraform init
-
-terraform plan
-
-terraform apply --auto-approve
-
-terraform destroy --auto-approve
-
-terraform reconfigure
-
-
-
 # you can use the codes below to create your passwords in parameter store
 eg. 1 db_user
 # modules/ssm/main.tf
