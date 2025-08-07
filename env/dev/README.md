@@ -280,9 +280,9 @@ plugin "aws" {
   version = "0.39.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
-```
+
 Then run:
-```bash
+
 tflint --init
 ```
 
@@ -323,7 +323,6 @@ Error: The root module input variable "region"/"cluster_name" is not set
 - Should be in the **root module**.
 - Child modules should not define providers, unless they need different configurations.
 
----
 
 
 
