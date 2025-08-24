@@ -114,6 +114,8 @@ resource "aws_eks_addon" "coredns" {
 #   depends_on     = [aws_cloudformation_stack.eks_cluster_stack]
 # }
 
+
+
 # -------------------------------
 # Node Group Stack (CloudFormation)
 # -------------------------------
