@@ -210,7 +210,15 @@ Would you like me to clean up your whole current workflow YAML and apply these b
 
 
 
+k8s-web-app/
 
+Act as a recruitment expert with deep expertise in screening resumes, talent acquisition, and candidate evaluation. 
+I will provide you with my current skills and I want you to help me tailor my previous experience ﻿﻿﻿
+Here's my Job responsibilities as an AWS solutions architect and DevOps engineer [Insert Responsibilities] 
+and here are my current skills: [insert Technical] Soft Skills: Insert Soft Skills) 
+Can you help rewrite my achievements as a care worker to include the expectations of my data Analyst skills.
+Use action verbs and metrics driven results? ﻿﻿﻿
+Give me more responsibilities and focus more on the soft skills than the technical skills
 
 
 
