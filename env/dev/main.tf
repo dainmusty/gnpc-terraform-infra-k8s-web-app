@@ -312,9 +312,9 @@ module "eks" {
   node_group_name         = "dev-nodegroup"
   instance_type           = "t2.medium"
   ami_type                = "AL2_x86_64"
-  desired_capacity        = 2
+  desired_capacity        = 1
   min_size                = 1
-  max_size                = 3
+  max_size                = 2
   volume_size             = 80
   volume_iops             = 3000
   volume_throughput       = 125
