@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch: # Enables manual run (for apply)
 
 env:
   AWS_REGION: us-east-1
@@ -12,6 +13,9 @@ env:
   SONAR_PROJECT_KEY: dainmusty_gnpc-terraform-infra-k8s-web-app
   SONAR_ORGANIZATION: effulgencetech
 
+# ======================
+# 1️⃣ SECURITY SCANS
+# ======================
 jobs:
   security-scan:
     name: Run Security Scans (Trivy + OWASP + SonarCloud)
@@ -48,7 +52,9 @@ jobs:
           path: reports
 
   sonarcloud:
+    name: SonarCloud Scan
     runs-on: ubuntu-latest
+    needs: security-scan
 
     steps:
       - uses: actions/checkout@v4
@@ -71,10 +77,13 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
 
-  terraform:
-    name: Deploy Infra with Terraform
+# ======================
+# 2️⃣ TERRAFORM PLAN
+# ======================
+  terraform-plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: security-scan
+    needs: [security-scan, sonarcloud]
 
     steps:
       - uses: actions/checkout@v4
@@ -95,21 +104,82 @@ jobs:
         working-directory: root-modules/env/dev
         run: terraform init -input=false
 
-      - name: Create EKS Cluster and Node Group
+      - name: Terraform Plan
         working-directory: root-modules/env/dev
-        run: |
-          terraform apply --auto-approve
-          
+        run: terraform plan -no-color -out=tfplan.out > tfplan.txt
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: root-modules/env/dev/tfplan.txt
+
+# ======================
+# 3️⃣ CREATE PULL REQUEST FOR PLAN REVIEW
+# ======================
+  create-pr:
+    name: Create or Update Pull Request
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: ./
+
+      - name: Create Pull Request with Plan Summary
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_PAT }}
+          commit-message: "Terraform plan results"
+          title: "Terraform Plan Review"
+          body: |
+            ## Terraform Plan Summary
+            \`\`\`
+            $(cat tfplan.txt | head -n 200)
+            \`\`\`
+          base: main
+          branch: infra-plan-review
+
+# ======================
+# 4️⃣ MANUAL APPLY (AFTER MERGE)
+# ======================
+  terraform-apply:
+    name: Manual Terraform Apply
+    runs-on: ubuntu-latest
+    needs: create-pr
+    if: github.event_name == 'workflow_dispatch' # Only run manually
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: root-modules/env/dev
+        run: terraform init -input=false
+
+      - name: Terraform Apply (Manual Trigger)
+        working-directory: root-modules/env/dev
+        run: terraform apply -auto-approve
+
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
-      - name: Check ArgoCD Status
-        run: |
-          echo "Checking ArgoCD pods status..."
-          kubectl get pods -n argocd
-          echo "Waiting for ArgoCD server pod to be ready..."
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s
 
       - name: Wait for ALB & Export DNS
         run: |
@@ -130,6 +200,7 @@ jobs:
         with:
           name: alb-info
           path: alb_info.txt
+
 
   deploy-k8s:
     name: ArgoCD Sync
