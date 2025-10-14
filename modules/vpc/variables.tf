@@ -58,7 +58,51 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "eip_associate_with_private_ip" {
-  description = "Associate Elastic IP with private IP"
+
+
+# Variables for flow logs and default security gp.
+variable "enable_flow_logs" {
+  type    = bool
+  default = true
+}
+
+variable "flow_logs_destination" {
+  type        = string
+  description = "ARN of S3 bucket or CloudWatch Logs group"
+}
+
+variable "flow_logs_destination_type" {
+  type        = string
+  description = "S3 or cloud-watch-logs"
+  default     = "cloud-watch-logs"
+}
+
+variable "flow_logs_traffic_type" {
+  type        = string
+  description = "ACCEPT, REJECT, or ALL"
+  default     = "ALL"
+}
+
+variable "vpc_flow_log_iam_role_arn" {
+  type        = string
+  description = "IAM role ARN for flow logs if using CloudWatch"
+  default     = null
+}
+
+variable "tags" {
+  description = "A map of tags to add to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "env" {
+  description = "Environment"
+  type = string
+  
+}
+
+variable "enable_nat_gateway" {
+  description = "Whether to create NAT Gateway and EIP"
   type        = bool
+  default     = true
 }

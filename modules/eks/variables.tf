@@ -1,111 +1,100 @@
-# EKS Cluster Variables
+# Variables for EKS Cluster.
+variable "vpc_id" {
+  description = "VPC ID where EKS will be deployed"
+  type        = string
+  
+}
+
 variable "cluster_name" {
-  description = "Name of the EKS cluster"
+  description = "EKS Cluster name"
   type        = string
 }
 
-variable "kube_version" {
-  description = "Kubernetes version for the EKS cluster"
+variable "cluster_endpoint_public_access" {
+  description = "Enable or disable public access to EKS endpoint"
+  type        = bool
+  default     = true
+}
+
+variable "cluster_version" {
+  description = "EKS Cluster version"
   type        = string
+  default     = "1.34"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+variable "subnet_ids" {
+  description = "Subnets used by EKS"
+  type        = list(string)
+}
+
+variable "private_sg_id" {
+  description = "SG for the private subnet"
+  type        = list(string)
+}
+
+variable "cluster_role" {
+  description = "ARN of the EKS Cluster Role"
   type        = string
+  
 }
 
-variable "availability_zone_1" {
-  description = "First availability zone"
+variable "eks_cluster_tags" {
+  description = "Resource tags"
+  type        = map(string)
+  default     = {}
+}
+
+
+variable "eks_cluster_policies" {
+  description = "EKS Cluster Policy Attachment"
+  type        = any
+}
+
+
+
+# Variables for EKS Managed Node Groups.
+variable "node_group_role_arn" {
+  description = "ARN of the Node Group IAM Role"
   type        = string
+  
 }
 
-variable "availability_zone_2" {
-  description = "Second availability zone"
-  type        = string
+variable "eks_node_groups_configuration" {
+  description = "Node group configuration map"
+  type = map(object({
+    min_size       = number
+    max_size       = number
+    desired_size   = number
+    instance_types = list(string)
+    capacity_type  = optional(string)
+    tags           = optional(map(string))
+  }))
+  default = {}
 }
 
-variable "availability_zone_3" {
-  description = "Third availability zone"
-  type        = string
-  default     = ""
-}
-
-variable "availability_zone_4" {
-  description = "Fourth availability zone"
-  type        = string
-  default     = ""
-}
-
-variable "public_subnet_1_cidr" {
-  description = "CIDR block for public subnet 1"
-  type        = string
-}
-
-variable "public_subnet_2_cidr" {
-  description = "CIDR block for public subnet 2"
-  type        = string
-}
-
-variable "private_subnet_1_cidr" {
-  description = "CIDR block for private subnet 1"
-  type        = string
-}
-
-variable "private_subnet_2_cidr" {
-  description = "CIDR block for private subnet 2"
-  type        = string
-}
-
-variable "region" {
-  description = "AWS region"
-  type        = string
+variable "eks_managed_node_group_defaults" {
+  description = "Defaults for node groups"
+  type = object({
+    ami_type                             = string
+    instance_types                       = list(string)
+    attach_cluster_primary_security_group = optional(bool, false)
+  })
+  default = {
+    ami_type       = "AL2023_x86_64_STANDARD"
+    instance_types = ["t2.micro"]
+  }
+  
 }
 
 
-# EKS Node Group Variables
-variable "node_group_name" {
-  description = "Name of the EKS node group"
-  type        = string
-}
-
-variable "instance_type" {
-  description = "EC2 instance type for the node group"
-  type        = string
-}
-
-variable "ami_type" {
-  description = "AMI type for the node group"
-  type        = string
-}
-
-variable "desired_capacity" {
-  description = "Desired number of nodes in the node group"
-  type        = number
-}
-
-variable "min_size" {
-  description = "Minimum number of nodes in the node group"
-  type        = number
-}
-
-variable "max_size" {
-  description = "Maximum number of nodes in the node group"
-  type        = number
-}
-
-variable "volume_size" {
-  description = "EBS volume size for each node"
-  type        = number
-}
-
-variable "volume_iops" {
-  description = "EBS volume IOPS for each node"
-  type        = number
-  default     = 0
-}
-
-variable "volume_throughput" {
-  description = "EBS volume throughput for each node"
-  type        = number
-  default     = 0
+# Variables for EKS and Node Group role and policies.
+variable "eks_node_policies" {
+  description = "List of IAM policies to attach to the EKS Node Group role"
+  type        = list(string)
+  default     = [
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  ]
+  
 }

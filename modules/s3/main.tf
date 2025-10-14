@@ -61,40 +61,70 @@ resource "aws_s3_bucket_versioning" "versioning_replication_bucket" {
 # Bucket Policies
 data "aws_caller_identity" "current" {}
 
-resource "aws_s3_bucket_policy" "config_write_policy" {
-  bucket = var.config_bucket_name
+resource "aws_s3_bucket_policy" "combined_logging_policy" {
+  bucket = var.log_bucket_name
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      # --- AWS Config ---
       {
-        Sid      = "AWSConfigBucketPermissionsCheck",
-        Effect   = "Allow",
-        Principal = {
-          Service = "config.amazonaws.com"
-        },
-        Action   = "s3:GetBucketAcl",
-        Resource = "arn:aws:s3:::${var.config_bucket_name}"
+        Sid: "AWSConfigBucketPermissionsCheck",
+        Effect: "Allow",
+        Principal: { Service: "config.amazonaws.com" },
+        Action: "s3:GetBucketAcl",
+        Resource: "arn:aws:s3:::${var.log_bucket_name}"
       },
       {
-        Sid      = "AWSConfigBucketDelivery",
-        Effect   = "Allow",
-        Principal = {
-          Service = "config.amazonaws.com"
-        },
-        Action   = [
+        Sid: "AWSConfigBucketDelivery",
+        Effect: "Allow",
+        Principal: { Service: "config.amazonaws.com" },
+        Action: [
           "s3:PutObject",
           "s3:PutObjectAcl"
         ],
-        Resource = "arn:aws:s3:::${var.config_bucket_name}/${var.config_key_prefix}/*",
-        Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        Resource: "arn:aws:s3:::${var.log_bucket_name}/config-logs/*",
+        Condition: {
+          StringEquals: {
+            "aws:SourceAccount": data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+
+      # --- VPC Flow Logs ---
+      {
+        Sid: "VPCFlowLogsBucketPermissionsCheck",
+        Effect: "Allow",
+        Principal: { Service: "delivery.logs.amazonaws.com" },
+        Action: "s3:GetBucketAcl",
+        Resource: "arn:aws:s3:::${var.log_bucket_name}"
+      },
+      {
+        Sid: "VPCFlowLogsBucketDelivery",
+        Effect: "Allow",
+        Principal: { Service: "delivery.logs.amazonaws.com" },
+        Action: "s3:PutObject",
+        Resource: "arn:aws:s3:::${var.log_bucket_name}/vpc-flow-logs/*",
+        Condition: {
+          StringEquals: {
+            "aws:SourceAccount": data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+
+      # --- CloudFront Logs ---
+      {
+        Sid: "AllowCloudFrontLogs",
+        Effect: "Allow",
+        Principal: { Service: "cloudfront.amazonaws.com" },
+        Action: "s3:PutObject",
+        Resource: "arn:aws:s3:::${var.log_bucket_name}/cloudfront-logs/*",
+        Condition: {
+          StringEquals: {
+            "s3:x-amz-acl": "bucket-owner-full-control"
           }
         }
       }
     ]
   })
 }
-
-

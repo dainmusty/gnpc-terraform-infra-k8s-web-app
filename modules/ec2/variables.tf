@@ -8,7 +8,7 @@ variable "key_name" {
   type        = string
 }
 
-variable "admin_profile_name" {
+variable "instance_profile_name" {
   description = "The IAM instance profile name for EC2 instances."
   type        = string
 }

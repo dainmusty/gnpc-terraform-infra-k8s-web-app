@@ -1,8 +1,28 @@
 # Variables for EKS Addons Module
+# Cluster required addons variables (core-dns, kube-proxy, vpc-cni))
+variable "cluster_version" {
+  description = "Version of the EKS cluster"
+  type        = string
+}
+
+variable "cluster_addons" {
+  description = "Map of EKS addons and their configuration"
+  type = map(object({
+    most_recent                = optional(bool)
+    addon_version              = optional(string)
+    resolve_conflicts_on_update = optional(string)
+  }))
+}
+
+variable "vpc_cni_irsa_role_arn" {
+  description = "ARN of the VPC CNI IRSA role"
+  type        = string
+  
+}
+
 variable "cluster_name" {
   description = "Name of the EKS cluster"
   type        = string
-  
 }
 
 variable "region" {
@@ -55,4 +75,16 @@ variable "ebs_csi_role_arn" {
   description = "ARN of the EBS CSI driver IAM role"
   type        = string
   
+}
+
+
+# Variables for providers
+variable "cluster_endpoint" {
+  description = "Cluster Endpoint"
+  type = string
+}
+
+variable "cluster_certificate_authority_data" {
+  description = "Cluster Certificate Authority"
+  type = string
 }

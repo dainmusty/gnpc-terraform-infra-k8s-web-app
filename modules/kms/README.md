@@ -1,5 +1,4 @@
 
-#kms notes
 # modules/kms/main.tf
 resource "aws_kms_key" "ssm_key" {
   description             = "KMS key for encrypting SSM parameters"
