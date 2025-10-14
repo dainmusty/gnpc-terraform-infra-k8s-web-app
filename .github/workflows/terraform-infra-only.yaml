@@ -135,9 +135,10 @@ jobs:
         run: |
           echo "## Terraform Plan Summary" > pr_body.md
           echo '```' >> pr_body.md
-          cat tfplan.txt | head -n 200 >> pr_body.md
+          # Use head safely and suppress the harmless broken pipe error
+          head -n 200 tfplan.txt >> pr_body.md || true
           echo '```' >> pr_body.md
-        shell: bash
+
 
       - name: Commit and Create PR
         uses: peter-evans/create-pull-request@v6
