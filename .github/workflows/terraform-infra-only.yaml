@@ -132,12 +132,19 @@ jobs:
           path: ./
 
       - name: Create Pull Request with Plan Summary
-        run: |
-          echo "## Terraform Plan Summary" > pr_body.md
-          echo '```' >> pr_body.md
-          # Use head safely and suppress the harmless broken pipe error
-          head -n 200 tfplan.txt >> pr_body.md || true
-          echo '```' >> pr_body.md
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_PAT }}   # ✅ Use your PAT with repo permissions
+          commit-message: "Terraform plan results"
+          title: "Terraform Plan Review"
+          body-path: pr_body.md
+          base: main
+          branch: infra-plan-review
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          delete-branch: false
+          draft: false
+
 
 
       - name: Commit and Create PR
