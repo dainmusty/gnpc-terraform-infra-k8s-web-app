@@ -106,7 +106,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: root-modules/env/dev
-        run: terraform plan -no-color -out=tfplan.out > tfplan.txt
+        run: terraform plan -no-color -out=tfplan.out | tee tfplan.txt
 
       - name: Upload Terraform Plan Artifact
         uses: actions/upload-artifact@v4

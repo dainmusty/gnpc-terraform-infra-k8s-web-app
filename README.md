@@ -514,5 +514,26 @@ Part 4 - Configuring credentials
 12. 
 
 
+2️⃣ Use tee (terraform plan | tee tfplan.txt)
 
+✅ Pros:
+
+You get the best of both worlds — see plan live in logs + save for artifact/PR
+
+Speeds up review/debugging (no artifact download needed)
+
+Commonly used in real-world CI/CD pipelines (AWS, HashiCorp examples, etc.)
+
+❌ Cons:
+
+Slightly larger workflow logs
+
+If your plan includes sensitive data (rare), it will appear in logs
+
+🔹 This is the most practical and balanced best practice for teams that review plan logs regularly.
+
+✅ Recommended Best Practice for You
+
+Since your pipeline already uploads the plan artifact and also creates a PR for plan review —
+👉 use tee so you can view plans directly in the GitHub Actions UI and still attach them to PRs.
 

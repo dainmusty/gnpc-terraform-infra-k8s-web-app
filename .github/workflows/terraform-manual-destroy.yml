@@ -1,4 +1,4 @@
-name: Terraform Init and Destroy by Manual Trigger
+name: Terraform and Destroy by Manual Trigger
 
 on:
   workflow_dispatch: # Manual trigger for Terraform destroy
