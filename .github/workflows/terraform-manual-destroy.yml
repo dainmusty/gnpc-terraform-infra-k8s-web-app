@@ -23,6 +23,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Verify directory structure
+        run: ls -R root-modules/env/dev
+
       - name: Terraform Init
         working-directory: root-modules/env/dev
         run: terraform init
