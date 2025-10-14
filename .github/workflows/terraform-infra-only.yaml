@@ -92,7 +92,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: env/dev
+        working-directory: root-modules/env/dev
         run: terraform init -input=false
 
       - name: Create EKS Cluster and Node Group
