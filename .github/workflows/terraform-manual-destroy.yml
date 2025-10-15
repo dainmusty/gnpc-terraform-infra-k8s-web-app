@@ -1,43 +1,53 @@
-# name: Terraform and Destroy by Manual Trigger
+name: Terraform Destroy | Manual Approval Only
 
-# on:
-#   workflow_dispatch: # Manual trigger for Terraform destroy
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: "Type YES to confirm full destroy"
+        required: true
+        default: "NO"
 
-# jobs:
-#   terraform-init:
-#     runs-on: ubuntu-latest
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: effulgencetech-dev
+  DEPLOYMENT_PATH: root-modules/env/dev
 
-#     steps:
-#       - name: Check out the repository
-#         uses: actions/checkout@v4
+permissions:
+  contents: read
+  id-token: write
 
-#       - name: Set up Terraform
-#         uses: hashicorp/setup-terraform@v2
-#         with:
-#           terraform_version: 1.6.6
+jobs:
+  Destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    environment:
+      name: dev  # Adds manual approval protection (recommended)
+    if: github.event.inputs.confirm_destroy == 'YES'
 
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ secrets.AWS_REGION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Verify directory structure
-#         run: ls -R root-modules/env/dev
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
 
-#       - name: Terraform Init
-#         working-directory: root-modules/env/dev
-#         run: terraform init
-#         env:
-#           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-#       - name: Terraform Destroy
-#         working-directory: root-modules/env/dev
-#         run: terraform destroy -auto-approve
-#         env:
-#           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Terraform Init
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
+        run: terraform init -input=false
+
+      - name: Terraform Destroy
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
+        run: terraform destroy -auto-approve
+
+      - name: Cleanup confirmation
+        run: echo "✅ Terraform infrastructure destroyed successfully."

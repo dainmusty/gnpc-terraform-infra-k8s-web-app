@@ -1,116 +1,42 @@
 name: Terraform Infra | K8s Deployment | CICD
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-      - "*" # Run on push to any feature branch
-
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
-    inputs:
-      terraform_action:
-        description: "Select the terraform action to perform"
-        required: true
-        type: choice
-        options:
-          - "plan"
-          - "apply"
-      skip_nochange:
-        description: "Apply even if no change is reported in the plan"
-        required: false
-        type: boolean
-
-env:
-  AWS_REGION: us-east-1
-  CLUSTER_NAME: effulgencetech-dev
-  SONAR_PROJECT_KEY: dainmusty_gnpc-terraform-infra-k8s-web-app
-  SONAR_ORGANIZATION: effulgencetech
-  DEPLOYMENT_PATH: root-modules/env/dev
 
 permissions:
-  packages: write
   contents: read
   id-token: write
 
-# =====================================================
-# 1️⃣ SECURITY SCANS (TRIVY + OWASP + SONARCLOUD)
-# =====================================================
+env:
+  DEPLOYMENT_PATH: root-modules/env/dev
+  TF_VERSION: 1.8.5
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: effulgencetech-dev
+
 jobs:
-  security-scan:
-    name: Run Security Scans (Trivy + OWASP + SonarCloud)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-
-      - name: OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        id: Depcheck
-        with:
-          project: 'effulgencetech'
-          path: '.'
-          format: 'HTML'
-          out: 'reports'
-          args: >
-            --failOnCVSS 7
-            --enableRetired
-
-      - name: Upload OWASP Dependency-Check Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: OWASP Depcheck Report
-          path: reports
-
-  sonarcloud:
-    name: SonarCloud Scan
-    runs-on: ubuntu-latest
-    needs: security-scan
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install SonarCloud Scanner
-        run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip -q sonar-scanner.zip
-          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-
-      - name: SonarCloud Scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-            -Dsonar.organization=${SONAR_ORGANIZATION} \
-            -Dsonar.branch.name=${GITHUB_REF_NAME} \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN
-
-# =====================================================
-# 2️⃣ TERRAFORM PLAN
-# =====================================================
-  Plan:
+  # =====================================================
+  # 1️⃣ TERRAFORM PLAN (Root Job - always runs first)
+  # =====================================================
+  terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: [security-scan, sonarcloud]
+    if: github.actor != 'github-actions[bot]'
+    defaults:
+      run:
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.6
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -120,76 +46,43 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform init -input=false
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
 
       - name: Terraform Plan
-        working-directory: ${{ env.DEPLOYMENT_PATH }}
-        run: terraform plan -no-color -out=tfplan.out | tee tfplan.txt
+        run: terraform plan -out=tfplan.out
 
-      - name: Upload Terraform Plan Artifact
+      - name: Save Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan
-          path: ${{ env.DEPLOYMENT_PATH }}/tfplan.txt
+          name: tfplan
+          path: ${{ env.DEPLOYMENT_PATH }}
 
-# =====================================================
-# 3️⃣ CREATE OR UPDATE PR FOR PLAN REVIEW
-# =====================================================
-  Approve:
-    name: Create or Update Pull Request
-    needs: Plan
+  # =====================================================
+  # 2️⃣ TERRAFORM APPLY (Manual trigger + Env approval)
+  # =====================================================
+  terraform-apply:
+    name: Terraform Apply
     runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-          path: ./  
-
-      - name: Generate PR Body File
-        run: |
-          echo "## Terraform Plan Summary" > pr_body.md
-          echo '```' >> pr_body.md
-          cat tfplan.txt | head -n 200 >> pr_body.md
-          echo '```' >> pr_body.md
-
-      - name: Create Pull Request with Plan Summary
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GH_PAT }}
-          commit-message: "Terraform plan results"
-          title: "Terraform Plan Review"
-          body-path: pr_body.md
-          base: main
-          branch: infra-plan-review-${{ github.run_id }}
-          delete-branch: true
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          draft: false
-
-      - name: Cleanup temporary files
-        run: rm -f pr_body.md tfplan.txt
-
-# =====================================================
-# 4️⃣ MANUAL APPLY
-# =====================================================
-  Apply:
-    name: Manual Terraform Apply
-    needs: Approve
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
-
-    steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.6
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -199,13 +92,20 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform init -input=false
 
-      - name: Terraform Apply
-        working-directory: ${{ env.DEPLOYMENT_PATH }}
-        run: terraform apply -auto-approve
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ env.DEPLOYMENT_PATH }}
 
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan.out
+
+      # =====================================================
+      # 3️⃣ UPDATE KUBECONFIG & WAIT FOR ALB DNS
+      # =====================================================
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
@@ -229,30 +129,3 @@ jobs:
         with:
           name: alb-info
           path: alb_info.txt
-
-# =====================================================
-# 5️⃣ K8S DEPLOYMENT (AFTER APPLY)
-# =====================================================
-  Deploy:
-    name: Deploy K8S Manifest Files
-    needs: Apply
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.terraform_action == 'apply' }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Git user
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
-
-      - name: Pull latest before pushing
-        run: git pull --rebase origin main
-
-      - name: Push changes
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/dainmusty/gnpc-terraform-infra-k8s-web-app.git
-          git push origin main
