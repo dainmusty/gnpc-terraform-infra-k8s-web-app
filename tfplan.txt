@@ -1,0 +1,2641 @@
+module.ssm.data.aws_ssm_parameter.db_secret_parameter_name: Reading...
+module.ssm.data.aws_ssm_parameter.db_access_parameter_name: Reading...
+module.iam_core.data.aws_iam_policy_document.grafana_assume: Reading...
+module.iam_core.data.aws_iam_policy_document.admin_assume: Reading...
+module.iam_core.data.aws_iam_policy_document.s3_full_access_assume: Reading...
+module.iam_core.data.aws_iam_policy_document.grafana_assume: Read complete after 0s [id=2851119427]
+module.iam_core.data.aws_iam_policy_document.admin_assume: Read complete after 0s [id=3960366575]
+module.iam_core.data.aws_iam_policy_document.s3_full_access_assume: Read complete after 0s [id=2851119427]
+module.iam_core.data.aws_region.current: Reading...
+module.addons.data.aws_secretsmanager_secret_version.slack_webhook: Reading...
+module.ssm.data.aws_ssm_parameter.key_name_parameter_name: Reading...
+module.iam_core.data.aws_region.current: Read complete after 0s [id=us-east-1]
+module.iam_core.data.aws_iam_policy_document.prometheus_assume: Reading...
+module.iam_core.data.aws_iam_policy_document.config_assume: Reading...
+module.iam_core.data.aws_caller_identity.current: Reading...
+module.iam_core.data.aws_iam_policy_document.prometheus_assume: Read complete after 0s [id=2851119427]
+module.iam_core.data.aws_iam_policy_document.config_assume: Read complete after 0s [id=607352202]
+module.ssm.data.aws_ssm_parameter.key_path_parameter_name: Reading...
+module.s3.data.aws_caller_identity.current: Reading...
+module.iam_core.data.aws_iam_policy_document.s3_rw_assume: Reading...
+module.addons.data.aws_secretsmanager_secret_version.grafana_admin: Reading...
+module.iam_core.data.aws_iam_policy_document.s3_rw_assume: Read complete after 1s [id=2851119427]
+module.iam_irsa.data.aws_secretsmanager_secret.grafana: Reading...
+module.iam_irsa.data.aws_caller_identity.current: Reading...
+module.iam_core.data.aws_caller_identity.current: Read complete after 1s [id=651706774390]
+module.s3.data.aws_caller_identity.current: Read complete after 1s [id=651706774390]
+module.iam_irsa.data.aws_caller_identity.current: Read complete after 0s [id=651706774390]
+module.addons.data.aws_secretsmanager_secret_version.grafana_admin: Read complete after 0s [id=grafana-user-passwd|AWSCURRENT]
+module.addons.data.aws_secretsmanager_secret_version.slack_webhook: Read complete after 1s [id=slack-webhook-alertmanager|AWSCURRENT]
+module.ssm.data.aws_ssm_parameter.key_name_parameter_name: Read complete after 1s [id=/kp/name]
+module.iam_irsa.data.aws_secretsmanager_secret.grafana: Read complete after 0s [id=arn:aws:secretsmanager:us-east-1:651706774390:secret:grafana-user-passwd-h2uIZ4]
+module.ssm.data.aws_ssm_parameter.db_secret_parameter_name: Read complete after 1s [id=/db/secure/access]
+module.ssm.data.aws_ssm_parameter.key_path_parameter_name: Read complete after 1s [id=/kp/path]
+module.ssm.data.aws_ssm_parameter.db_access_parameter_name: Read complete after 1s [id=/db/access]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # module.addons.aws_eks_addon.addons["coredns"] will be created
+  + resource "aws_eks_addon" "addons" {
+      + addon_name               = "coredns"
+      + addon_version            = "v1.12.3-eksbuild.1"
+      + arn                      = (known after apply)
+      + cluster_name             = "dev-gnpc-eks-cluster"
+      + configuration_values     = (known after apply)
+      + created_at               = (known after apply)
+      + id                       = (known after apply)
+      + modified_at              = (known after apply)
+      + service_account_role_arn = (known after apply)
+      + tags_all                 = (known after apply)
+    }
+
+  # module.addons.aws_eks_addon.addons["kube-proxy"] will be created
+  + resource "aws_eks_addon" "addons" {
+      + addon_name               = "kube-proxy"
+      + addon_version            = "v1.34.0-eksbuild.2"
+      + arn                      = (known after apply)
+      + cluster_name             = "dev-gnpc-eks-cluster"
+      + configuration_values     = (known after apply)
+      + created_at               = (known after apply)
+      + id                       = (known after apply)
+      + modified_at              = (known after apply)
+      + service_account_role_arn = (known after apply)
+      + tags_all                 = (known after apply)
+    }
+
+  # module.addons.aws_eks_addon.addons["vpc-cni"] will be created
+  + resource "aws_eks_addon" "addons" {
+      + addon_name               = "vpc-cni"
+      + addon_version            = "v1.20.1-eksbuild.3"
+      + arn                      = (known after apply)
+      + cluster_name             = "dev-gnpc-eks-cluster"
+      + configuration_values     = (known after apply)
+      + created_at               = (known after apply)
+      + id                       = (known after apply)
+      + modified_at              = (known after apply)
+      + service_account_role_arn = (known after apply)
+      + tags_all                 = (known after apply)
+    }
+
+  # module.addons.helm_release.argocd will be created
+  + resource "helm_release" "argocd" {
+      + atomic                     = false
+      + chart                      = "argo-cd"
+      + cleanup_on_fail            = false
+      + create_namespace           = false
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + manifest                   = (known after apply)
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "argocd"
+      + namespace                  = "argocd"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://argoproj.github.io/argo-helm"
+      + reset_values               = false
+      + reuse_values               = false
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + timeout                    = 300
+      + values                     = [
+          + <<-EOT
+                server:
+                  service:
+                    ports:
+                      http: 8080
+                  ingress:
+                    enabled: true
+                    ingressClassName: alb
+                    annotations:
+                      alb.ingress.kubernetes.io/scheme: internet-facing
+                      alb.ingress.kubernetes.io/target-type: ip
+                      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+                      alb.ingress.kubernetes.io/backend-protocol: HTTP
+                    hosts:
+                      - argocd.example.com
+                    paths:
+                      - path: /
+                        pathType: Prefix
+                        port:
+                          number: 8080  # ✅ explicitly tell ingress to use port 8080
+            EOT,
+        ]
+      + verify                     = false
+      + version                    = "8.6.1"
+      + wait                       = true
+      + wait_for_jobs              = false
+
+      + set {
+          + name  = "server.serviceAccount.create"
+          + value = "false"
+        }
+      + set {
+          + name  = "server.serviceAccount.name"
+          + value = "argocd-server"
+        }
+    }
+
+  # module.addons.helm_release.aws_load_balancer_controller will be created
+  + resource "helm_release" "aws_load_balancer_controller" {
+      + atomic                     = false
+      + chart                      = "aws-load-balancer-controller"
+      + cleanup_on_fail            = false
+      + create_namespace           = false
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + manifest                   = (known after apply)
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "aws-load-balancer-controller"
+      + namespace                  = "kube-system"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://aws.github.io/eks-charts"
+      + reset_values               = false
+      + reuse_values               = false
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + timeout                    = 300
+      + verify                     = false
+      + version                    = "1.14.0"
+      + wait                       = true
+      + wait_for_jobs              = false
+
+      + set {
+          + name  = "clusterName"
+          + value = "dev-gnpc-eks-cluster"
+        }
+      + set {
+          + name  = "serviceAccount.create"
+          + value = "true"
+        }
+      + set {
+          + name  = "serviceAccount.name"
+          + value = "aws-load-balancer-controller"
+        }
+    }
+
+  # module.addons.helm_release.ebs_csi_driver will be created
+  + resource "helm_release" "ebs_csi_driver" {
+      + atomic                     = false
+      + chart                      = "aws-ebs-csi-driver"
+      + cleanup_on_fail            = false
+      + create_namespace           = false
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + manifest                   = (known after apply)
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "aws-ebs-csi-driver"
+      + namespace                  = "kube-system"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+      + reset_values               = false
+      + reuse_values               = false
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + timeout                    = 300
+      + values                     = [
+          + <<-EOT
+                "controller":
+                  "serviceAccount":
+                    "create": false
+                    "name": "ebs-csi-controller-sa"
+            EOT,
+        ]
+      + verify                     = false
+      + version                    = "2.28.0"
+      + wait                       = true
+      + wait_for_jobs              = false
+    }
+
+  # module.addons.helm_release.kube_prometheus_stack will be created
+  + resource "helm_release" "kube_prometheus_stack" {
+      + atomic                     = false
+      + chart                      = "kube-prometheus-stack"
+      + cleanup_on_fail            = false
+      + create_namespace           = true
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + manifest                   = (known after apply)
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "kube-prometheus-stack"
+      + namespace                  = "monitoring"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://prometheus-community.github.io/helm-charts"
+      + reset_values               = false
+      + reuse_values               = false
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + timeout                    = 300
+      + values                     = [
+          + <<-EOT
+                grafana:
+                  serviceAccount:
+                    create: false
+                    name: grafana
+                
+                  service:
+                    type: LoadBalancer
+                
+                  admin:
+                    existingSecret: grafana-admin
+                
+                  persistence:
+                    enabled: true
+                    storageClassName: gp2
+                    accessModes:
+                      - ReadWriteOnce
+                    size: 5Gi
+                
+                  resources:
+                    limits:
+                      cpu: 500m
+                      memory: 512Mi
+                    requests:
+                      cpu: 250m
+                      memory: 256Mi
+                
+                  grafana.ini:
+                    auth.anonymous:
+                      enabled: false
+                    server:
+                      root_url: "%(protocol)s://%(domain)s/"
+                
+                  serviceMonitor:
+                    enabled: true
+            EOT,
+          + <<-EOT
+                alertmanager:
+                  alertmanagerSpec:
+                    volumes:
+                      - name: slack-webhook-secret
+                        secret:
+                          secretName: alertmanager-slack-webhook
+                
+                    volumeMounts:
+                      - name: slack-webhook-secret
+                        mountPath: /etc/alertmanager/secrets
+                        readOnly: true
+                
+                  config:
+                    global:
+                      resolve_timeout: 5m
+                
+                    route:
+                      receiver: slack-notifications
+                
+                    receivers:
+                      - name: slack-notifications
+                        slack_configs:
+                          - api_url_file: /etc/alertmanager/secrets/slack_url
+                            channel: "#alerts"
+                            send_resolved: true
+            EOT,
+          + <<-EOT
+                prometheus:
+                  prometheusSpec:
+                    additionalPrometheusRules:
+                      - name: custom-node-alerts
+                        groups:
+                          - name: node.rules
+                            rules:
+                              - alert: HighCPUUsage
+                                expr: >
+                                  100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle",job="node-exporter"}[5m])) * 100) > 80
+                                for: 2m
+                                labels:
+                                  severity: warning
+                                annotations:
+                                  summary: High CPU usage on {{ $labels.instance }}
+                                  description: CPU usage has been above 80% for more than 2 minutes.
+                
+                              - alert: HighMemoryUsage
+                                expr: >
+                                  (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+                                for: 2m
+                                labels:
+                                  severity: warning
+                                annotations:
+                                  summary: High memory usage on {{ $labels.instance }}
+                                  description: Memory usage has exceeded 80% for more than 2 minutes.
+                
+                              - alert: NodeDown
+                                expr: up{job="node-exporter"} == 0
+                                for: 1m
+                                labels:
+                                  severity: critical
+                                annotations:
+                                  summary: Node {{ $labels.instance }} is down
+                                  description: Prometheus target {{ $labels.instance }} is unreachable (up == 0)
+                
+                      - name: test-alert
+                        groups:
+                          - name: test.rules
+                            rules:
+                              - alert: TestAlert
+                                expr: vector(1)
+                                for: 1m
+                                labels:
+                                  severity: info
+                                annotations:
+                                  summary: This is a test alert
+                                  description: Firing to test Alertmanager and Slack integration
+            EOT,
+        ]
+      + verify                     = false
+      + version                    = "56.7.0"
+      + wait                       = true
+      + wait_for_jobs              = false
+    }
+
+  # module.addons.kubernetes_namespace.argocd will be created
+  + resource "kubernetes_namespace" "argocd" {
+      + id                               = (known after apply)
+      + wait_for_default_service_account = false
+
+      + metadata {
+          + generation       = (known after apply)
+          + name             = "argocd"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_namespace.monitoring will be created
+  + resource "kubernetes_namespace" "monitoring" {
+      + id                               = (known after apply)
+      + wait_for_default_service_account = false
+
+      + metadata {
+          + generation       = (known after apply)
+          + name             = "monitoring"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_secret.alertmanager_slack_webhook will be created
+  + resource "kubernetes_secret" "alertmanager_slack_webhook" {
+      + data                           = (sensitive value)
+      + id                             = (known after apply)
+      + type                           = "Opaque"
+      + wait_for_service_account_token = true
+
+      + metadata {
+          + generation       = (known after apply)
+          + name             = "alertmanager-slack-webhook"
+          + namespace        = "monitoring"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_secret.grafana_admin will be created
+  + resource "kubernetes_secret" "grafana_admin" {
+      + data                           = (sensitive value)
+      + id                             = (known after apply)
+      + type                           = "Opaque"
+      + wait_for_service_account_token = true
+
+      + metadata {
+          + generation       = (known after apply)
+          + name             = "grafana-admin"
+          + namespace        = "monitoring"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_service_account.argocd_sa will be created
+  + resource "kubernetes_service_account" "argocd_sa" {
+      + automount_service_account_token = true
+      + default_secret_name             = (known after apply)
+      + id                              = (known after apply)
+
+      + metadata {
+          + annotations      = (known after apply)
+          + generation       = (known after apply)
+          + name             = "argocd-server"
+          + namespace        = "argocd"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_service_account.ebs_csi_controller will be created
+  + resource "kubernetes_service_account" "ebs_csi_controller" {
+      + automount_service_account_token = true
+      + default_secret_name             = (known after apply)
+      + id                              = (known after apply)
+
+      + metadata {
+          + annotations      = (known after apply)
+          + generation       = (known after apply)
+          + name             = "ebs-csi-controller-sa"
+          + namespace        = "kube-system"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.addons.kubernetes_service_account.grafana will be created
+  + resource "kubernetes_service_account" "grafana" {
+      + automount_service_account_token = true
+      + default_secret_name             = (known after apply)
+      + id                              = (known after apply)
+
+      + metadata {
+          + annotations      = (known after apply)
+          + generation       = (known after apply)
+          + name             = "grafana"
+          + namespace        = "monitoring"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
+    }
+
+  # module.bastion_sg.aws_security_group.bastion_sg will be created
+  + resource "aws_security_group" "bastion_sg" {
+      + arn                    = (known after apply)
+      + description            = "Security group for Dev-GNPC-web"
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = "Allow all egress"
+              + from_port        = 0
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = "Allow traffic from the internet"
+              + from_port        = 22
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 22
+            },
+        ]
+      + name                   = "Dev-GNPC-web-sg"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Environment" = "Dev"
+          + "Name"        = "Dev-GNPC-bastion-sg"
+        }
+      + tags_all               = {
+          + "Environment" = "Dev"
+          + "Name"        = "Dev-GNPC-bastion-sg"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.ec2.aws_instance.public["AL2023-1"] will be created
+  + resource "aws_instance" "public" {
+      + ami                                  = "ami-08b5b3a93ed654d19"
+      + arn                                  = (known after apply)
+      + associate_public_ip_address          = (known after apply)
+      + availability_zone                    = (known after apply)
+      + cpu_core_count                       = (known after apply)
+      + cpu_threads_per_core                 = (known after apply)
+      + disable_api_stop                     = (known after apply)
+      + disable_api_termination              = (known after apply)
+      + ebs_optimized                        = (known after apply)
+      + enable_primary_ipv6                  = (known after apply)
+      + get_password_data                    = false
+      + host_id                              = (known after apply)
+      + host_resource_group_arn              = (known after apply)
+      + iam_instance_profile                 = "GNPC-dev-rbac-instance-profile"
+      + id                                   = (known after apply)
+      + instance_initiated_shutdown_behavior = (known after apply)
+      + instance_lifecycle                   = (known after apply)
+      + instance_state                       = (known after apply)
+      + instance_type                        = "t2.micro"
+      + ipv6_address_count                   = (known after apply)
+      + ipv6_addresses                       = (known after apply)
+      + key_name                             = (sensitive value)
+      + monitoring                           = (known after apply)
+      + outpost_arn                          = (known after apply)
+      + password_data                        = (known after apply)
+      + placement_group                      = (known after apply)
+      + placement_partition_number           = (known after apply)
+      + primary_network_interface_id         = (known after apply)
+      + private_dns                          = (known after apply)
+      + private_ip                           = (known after apply)
+      + public_dns                           = (known after apply)
+      + public_ip                            = (known after apply)
+      + secondary_private_ips                = (known after apply)
+      + security_groups                      = (known after apply)
+      + source_dest_check                    = true
+      + spot_instance_request_id             = (known after apply)
+      + subnet_id                            = (known after apply)
+      + tags                                 = {
+          + "Environment" = "Dev-GNPC"
+          + "Name"        = "bastion"
+        }
+      + tags_all                             = {
+          + "Environment" = "Dev-GNPC"
+          + "Name"        = "bastion"
+        }
+      + tenancy                              = (known after apply)
+      + user_data                            = "a2784f1a823f45c16f82a8c9492eabd2f00bf83d"
+      + user_data_base64                     = (known after apply)
+      + user_data_replace_on_change          = false
+      + vpc_security_group_ids               = (known after apply)
+
+      + root_block_device {
+          + delete_on_termination = true
+          + device_name           = (known after apply)
+          + encrypted             = (known after apply)
+          + iops                  = (known after apply)
+          + kms_key_id            = (known after apply)
+          + tags_all              = (known after apply)
+          + throughput            = (known after apply)
+          + volume_id             = (known after apply)
+          + volume_size           = 8
+          + volume_type           = "gp3"
+        }
+    }
+
+  # module.eks.data.tls_certificate.oidc_cert will be read during apply
+  # (config refers to values not yet known)
+ <= data "tls_certificate" "oidc_cert" {
+      + certificates = (known after apply)
+      + id           = (known after apply)
+      + url          = (known after apply)
+    }
+
+  # module.eks.aws_eks_cluster.dev_cluster will be created
+  + resource "aws_eks_cluster" "dev_cluster" {
+      + arn                           = (known after apply)
+      + bootstrap_self_managed_addons = true
+      + certificate_authority         = (known after apply)
+      + cluster_id                    = (known after apply)
+      + created_at                    = (known after apply)
+      + endpoint                      = (known after apply)
+      + id                            = (known after apply)
+      + identity                      = (known after apply)
+      + name                          = "dev-gnpc-eks-cluster"
+      + platform_version              = (known after apply)
+      + role_arn                      = (known after apply)
+      + status                        = (known after apply)
+      + tags                          = {
+          + "Environment" = "Dev-GNPC"
+          + "Project"     = "Startup"
+        }
+      + tags_all                      = {
+          + "Environment" = "Dev-GNPC"
+          + "Project"     = "Startup"
+        }
+      + version                       = "1.34"
+
+      + vpc_config {
+          + cluster_security_group_id = (known after apply)
+          + endpoint_private_access   = false
+          + endpoint_public_access    = true
+          + public_access_cidrs       = (known after apply)
+          + security_group_ids        = (known after apply)
+          + subnet_ids                = (known after apply)
+          + vpc_id                    = (known after apply)
+        }
+    }
+
+  # module.eks.aws_eks_node_group.dev_wg["dev-wg"] will be created
+  + resource "aws_eks_node_group" "dev_wg" {
+      + ami_type               = "AL2023_x86_64_STANDARD"
+      + arn                    = (known after apply)
+      + capacity_type          = "SPOT"
+      + cluster_name           = "dev-gnpc-eks-cluster"
+      + disk_size              = (known after apply)
+      + id                     = (known after apply)
+      + instance_types         = [
+          + "t3.medium",
+        ]
+      + node_group_name        = "dev-wg"
+      + node_group_name_prefix = (known after apply)
+      + node_role_arn          = (known after apply)
+      + release_version        = (known after apply)
+      + resources              = (known after apply)
+      + status                 = (known after apply)
+      + subnet_ids             = (known after apply)
+      + tags                   = {
+          + "Environment" = "Dev-GNPC"
+          + "Name"        = "dev-wg"
+          + "Project"     = "Startup"
+        }
+      + tags_all               = {
+          + "Environment" = "Dev-GNPC"
+          + "Name"        = "dev-wg"
+          + "Project"     = "Startup"
+        }
+      + version                = (known after apply)
+
+      + scaling_config {
+          + desired_size = 1
+          + max_size     = 2
+          + min_size     = 1
+        }
+    }
+
+  # module.eks.aws_iam_openid_connect_provider.eks will be created
+  + resource "aws_iam_openid_connect_provider" "eks" {
+      + arn             = (known after apply)
+      + client_id_list  = [
+          + "sts.amazonaws.com",
+        ]
+      + id              = (known after apply)
+      + tags_all        = (known after apply)
+      + thumbprint_list = (known after apply)
+      + url             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_instance_profile.grafana_instance_profile will be created
+  + resource "aws_iam_instance_profile" "grafana_instance_profile" {
+      + arn         = (known after apply)
+      + create_date = (known after apply)
+      + id          = (known after apply)
+      + name        = "GNPC-dev-grafana-instance-profile"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + role        = "company-name-Dev-GNPC-grafana-role"
+      + tags_all    = (known after apply)
+      + unique_id   = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_instance_profile.prometheus_instance_profile will be created
+  + resource "aws_iam_instance_profile" "prometheus_instance_profile" {
+      + arn         = (known after apply)
+      + create_date = (known after apply)
+      + id          = (known after apply)
+      + name        = "GNPC-dev-prometheus-instance-profile"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + role        = "company-name-Dev-GNPC-prometheus-role"
+      + tags_all    = (known after apply)
+      + unique_id   = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_instance_profile.rbac_instance_profile will be created
+  + resource "aws_iam_instance_profile" "rbac_instance_profile" {
+      + arn         = (known after apply)
+      + create_date = (known after apply)
+      + id          = (known after apply)
+      + name        = "GNPC-dev-rbac-instance-profile"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + role        = "company-name-Dev-GNPC-admin-role"
+      + tags_all    = (known after apply)
+      + unique_id   = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.admin_policy will be created
+  + resource "aws_iam_policy" "admin_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Full admin access for admin role"
+      + id               = (known after apply)
+      + name             = "admin-full-access"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = "*"
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.cloudwatch_policy will be created
+  + resource "aws_iam_policy" "cloudwatch_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for CloudWatch role"
+      + id               = (known after apply)
+      + name             = "Dev-GNPC-cloudwatch-policy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "cloudwatch:GetMetricData",
+                          + "cloudwatch:GetMetricStatistics",
+                          + "cloudwatch:ListMetrics",
+                          + "logs:DescribeLogGroups",
+                          + "logs:GetLogEvents",
+                          + "logs:FilterLogEvents",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.config_policy will be created
+  + resource "aws_iam_policy" "config_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for AWS Config role"
+      + id               = (known after apply)
+      + name             = "aws-config-policy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = (known after apply)
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.grafana_policy will be created
+  + resource "aws_iam_policy" "grafana_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for Grafana role"
+      + id               = (known after apply)
+      + name             = "Dev-GNPC-grafana-policy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "cloudwatch:GetMetricData",
+                          + "logs:DescribeLogGroups",
+                          + "logs:DescribeLogStreams",
+                          + "logs:GetLogEvents",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "ec2:DescribeInstances",
+                          + "ec2:DescribeTags",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.permission_boundary will be created
+  + resource "aws_iam_policy" "permission_boundary" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Unified permission boundary for EKS, VPC Flow Logs, CloudWatch, Grafana, Prometheus, and S3 access roles."
+      + id               = (known after apply)
+      + name             = "company-name-Dev-GNPC-permission-boundary"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = (known after apply)
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.prometheus_policy will be created
+  + resource "aws_iam_policy" "prometheus_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for Prometheus role"
+      + id               = (known after apply)
+      + name             = "Dev-GNPC-prometheus-policy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "cloudwatch:PutMetricData",
+                          + "cloudwatch:GetMetricData",
+                          + "cloudwatch:GetMetricStatistics",
+                          + "cloudwatch:ListMetrics",
+                          + "logs:CreateLogGroup",
+                          + "logs:CreateLogStream",
+                          + "logs:PutLogEvents",
+                          + "ec2:DescribeInstances",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.s3_full_access_policy will be created
+  + resource "aws_iam_policy" "s3_full_access_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for full read/write S3 access"
+      + id               = (known after apply)
+      + name             = "s3-full-access"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = (known after apply)
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_policy.s3_rw_access will be created
+  + resource "aws_iam_policy" "s3_rw_access" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Allow read/write access to the specified S3 bucket"
+      + id               = (known after apply)
+      + name             = "S3AccessToBucket"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = (known after apply)
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.admin_role will be created
+  + resource "aws_iam_role" "admin_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = [
+                              + "ssm.amazonaws.com",
+                              + "ec2.amazonaws.com",
+                              + "config.amazonaws.com",
+                              + "cloudwatch.amazonaws.com",
+                              + "apigateway.amazonaws.com",
+                            ]
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-admin-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.config_role will be created
+  + resource "aws_iam_role" "config_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "config.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-config-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.eks_cluster_role will be created
+  + resource "aws_iam_role" "eks_cluster_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "eks.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "Dev-GNPC-eks-cluster-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags                  = {
+          + "Environment" = "Dev-GNPC"
+          + "Project"     = "Startup"
+        }
+      + tags_all              = {
+          + "Environment" = "Dev-GNPC"
+          + "Project"     = "Startup"
+        }
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.grafana_role will be created
+  + resource "aws_iam_role" "grafana_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-grafana-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.node_group_role will be created
+  + resource "aws_iam_role" "node_group_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "Dev-GNPC-nodegroup-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags                  = {
+          + "Environment" = "Dev"
+          + "Project"     = "Startup"
+        }
+      + tags_all              = {
+          + "Environment" = "Dev"
+          + "Project"     = "Startup"
+        }
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.prometheus_role will be created
+  + resource "aws_iam_role" "prometheus_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-prometheus-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.s3_full_access_role will be created
+  + resource "aws_iam_role" "s3_full_access_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-s3-full-access-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.s3_rw_role will be created
+  + resource "aws_iam_role" "s3_rw_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-s3-rw-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role.vpc_flow_logs will be created
+  + resource "aws_iam_role" "vpc_flow_logs" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "vpc-flow-logs.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "company-name-Dev-GNPC-vpc-flow-logs-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + permissions_boundary  = (known after apply)
+      + tags                  = {
+          + "Name" = "Dev-GNPC-vpc-flow-logs-role"
+        }
+      + tags_all              = {
+          + "Name" = "Dev-GNPC-vpc-flow-logs-role"
+        }
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role_policy.vpc_flow_logs_policy will be created
+  + resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
+      + id          = (known after apply)
+      + name        = "vpc-flow-logs-policy"
+      + name_prefix = (known after apply)
+      + policy      = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "s3:PutObject",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "arn:aws:s3:::dev-gnpc-log-bucket/AWSLogs/651706774390/*"
+                    },
+                  + {
+                      + Action   = [
+                          + "s3:GetBucketLocation",
+                          + "s3:ListBucket",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "arn:aws:s3:::dev-gnpc-log-bucket"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + role        = (known after apply)
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.attach_admin_policy will be created
+  + resource "aws_iam_role_policy_attachment" "attach_admin_policy" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-admin-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.attach_s3_full_access_policy will be created
+  + resource "aws_iam_role_policy_attachment" "attach_s3_full_access_policy" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-s3-full-access-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.attach_s3_rw_policy will be created
+  + resource "aws_iam_role_policy_attachment" "attach_s3_rw_policy" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-s3-rw-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.cloudwatch_policy_attachment will be created
+  + resource "aws_iam_role_policy_attachment" "cloudwatch_policy_attachment" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-grafana-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_cluster_policies["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_cluster_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      + role       = "Dev-GNPC-eks-cluster-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.eks_node_policies["arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"] will be created
+  + resource "aws_iam_role_policy_attachment" "eks_node_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+      + role       = "Dev-GNPC-nodegroup-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.grafana_policy_attachment will be created
+  + resource "aws_iam_role_policy_attachment" "grafana_policy_attachment" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-grafana-role"
+    }
+
+  # module.iam_core.aws_iam_role_policy_attachment.prometheus_policy_attachment will be created
+  + resource "aws_iam_role_policy_attachment" "prometheus_policy_attachment" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "company-name-Dev-GNPC-prometheus-role"
+    }
+
+  # module.iam_irsa.data.aws_iam_policy_document.alb_controller_oidc_trust will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "alb_controller_oidc_trust" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions = [
+              + "sts:AssumeRoleWithWebIdentity",
+            ]
+
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "sts.amazonaws.com",
+                ]
+              + variable = (known after apply)
+            }
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "system:serviceaccount:kube-system:alb-controller",
+                ]
+              + variable = (known after apply)
+            }
+
+          + principals {
+              + identifiers = [
+                  + (known after apply),
+                ]
+              + type        = "Federated"
+            }
+        }
+    }
+
+  # module.iam_irsa.data.aws_iam_policy_document.vpc_cni_assume_role_policy will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "vpc_cni_assume_role_policy" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions = [
+              + "sts:AssumeRoleWithWebIdentity",
+            ]
+
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "system:serviceaccount:kube-system:aws-node",
+                ]
+              + variable = (known after apply)
+            }
+
+          + principals {
+              + identifiers = [
+                  + (known after apply),
+                ]
+              + type        = "Federated"
+            }
+        }
+    }
+
+  # module.iam_irsa.aws_iam_policy.alb_controller_policy will be created
+  + resource "aws_iam_policy" "alb_controller_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for AWS ALB Controller"
+      + id               = (known after apply)
+      + name             = "AWSLoadBalancerControllerIAMPolicy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = [
+                          + "iam:CreateServiceLinkedRole",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "iam:AWSServiceName" = "elasticloadbalancing.amazonaws.com"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "ec2:DescribeAccountAttributes",
+                          + "ec2:DescribeAddresses",
+                          + "ec2:DescribeAvailabilityZones",
+                          + "ec2:DescribeInternetGateways",
+                          + "ec2:DescribeVpcs",
+                          + "ec2:DescribeVpcPeeringConnections",
+                          + "ec2:DescribeSubnets",
+                          + "ec2:DescribeSecurityGroups",
+                          + "ec2:DescribeInstances",
+                          + "ec2:DescribeNetworkInterfaces",
+                          + "ec2:DescribeTags",
+                          + "ec2:GetCoipPoolUsage",
+                          + "ec2:DescribeCoipPools",
+                          + "elasticloadbalancing:DescribeLoadBalancers",
+                          + "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                          + "elasticloadbalancing:DescribeListeners",
+                          + "elasticloadbalancing:DescribeListenerCertificates",
+                          + "elasticloadbalancing:DescribeSSLPolicies",
+                          + "elasticloadbalancing:DescribeRules",
+                          + "elasticloadbalancing:DescribeTargetGroups",
+                          + "elasticloadbalancing:DescribeTargetGroupAttributes",
+                          + "elasticloadbalancing:DescribeTargetHealth",
+                          + "elasticloadbalancing:DescribeTags",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "cognito-idp:DescribeUserPoolClient",
+                          + "acm:ListCertificates",
+                          + "acm:DescribeCertificate",
+                          + "iam:ListServerCertificates",
+                          + "iam:GetServerCertificate",
+                          + "waf-regional:GetWebACL",
+                          + "waf-regional:GetWebACLForResource",
+                          + "waf-regional:AssociateWebACL",
+                          + "waf-regional:DisassociateWebACL",
+                          + "wafv2:GetWebACL",
+                          + "wafv2:GetWebACLForResource",
+                          + "wafv2:AssociateWebACL",
+                          + "wafv2:DisassociateWebACL",
+                          + "shield:GetSubscriptionState",
+                          + "shield:DescribeProtection",
+                          + "shield:CreateProtection",
+                          + "shield:DeleteProtection",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "ec2:AuthorizeSecurityGroupIngress",
+                          + "ec2:RevokeSecurityGroupIngress",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "ec2:CreateSecurityGroup",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:CreateTags",
+                        ]
+                      + Condition = {
+                          + Null         = {
+                              + "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                          + StringEquals = {
+                              + "ec2:CreateAction" = "CreateSecurityGroup"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "arn:aws:ec2:*:*:security-group/*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:CreateTags",
+                          + "ec2:DeleteTags",
+                        ]
+                      + Condition = {
+                          + Null = {
+                              + "aws:RequestTag/elbv2.k8s.aws/cluster"  = "true"
+                              + "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "arn:aws:ec2:*:*:security-group/*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:AuthorizeSecurityGroupIngress",
+                          + "ec2:RevokeSecurityGroupIngress",
+                          + "ec2:DeleteSecurityGroup",
+                        ]
+                      + Condition = {
+                          + Null = {
+                              + "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "elasticloadbalancing:CreateLoadBalancer",
+                          + "elasticloadbalancing:CreateTargetGroup",
+                        ]
+                      + Condition = {
+                          + Null = {
+                              + "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "elasticloadbalancing:CreateListener",
+                          + "elasticloadbalancing:DeleteListener",
+                          + "elasticloadbalancing:CreateRule",
+                          + "elasticloadbalancing:DeleteRule",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "elasticloadbalancing:AddTags",
+                          + "elasticloadbalancing:RemoveTags",
+                        ]
+                      + Condition = {
+                          + Null = {
+                              + "aws:RequestTag/elbv2.k8s.aws/cluster"  = "true"
+                              + "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = [
+                          + "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+                        ]
+                    },
+                  + {
+                      + Action   = [
+                          + "elasticloadbalancing:AddTags",
+                          + "elasticloadbalancing:RemoveTags",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = [
+                          + "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*",
+                        ]
+                    },
+                  + {
+                      + Action    = [
+                          + "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                          + "elasticloadbalancing:SetIpAddressType",
+                          + "elasticloadbalancing:SetSecurityGroups",
+                          + "elasticloadbalancing:SetSubnets",
+                          + "elasticloadbalancing:DeleteLoadBalancer",
+                          + "elasticloadbalancing:ModifyTargetGroup",
+                          + "elasticloadbalancing:ModifyTargetGroupAttributes",
+                          + "elasticloadbalancing:DeleteTargetGroup",
+                        ]
+                      + Condition = {
+                          + Null = {
+                              + "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "elasticloadbalancing:AddTags",
+                        ]
+                      + Condition = {
+                          + Null         = {
+                              + "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
+                            }
+                          + StringEquals = {
+                              + "elasticloadbalancing:CreateAction" = [
+                                  + "CreateTargetGroup",
+                                  + "CreateLoadBalancer",
+                                ]
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = [
+                          + "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                          + "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+                        ]
+                    },
+                  + {
+                      + Action   = [
+                          + "elasticloadbalancing:RegisterTargets",
+                          + "elasticloadbalancing:DeregisterTargets",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                    },
+                  + {
+                      + Action   = [
+                          + "elasticloadbalancing:SetWebAcl",
+                          + "elasticloadbalancing:ModifyListener",
+                          + "elasticloadbalancing:AddListenerCertificates",
+                          + "elasticloadbalancing:RemoveListenerCertificates",
+                          + "elasticloadbalancing:ModifyRule",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_policy.ebs_csi_driver_policy will be created
+  + resource "aws_iam_policy" "ebs_csi_driver_policy" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Policy for AWS EBS CSI Driver"
+      + id               = (known after apply)
+      + name             = "AWSEBSCSIDriverIAMPolicy"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "ec2:CreateSnapshot",
+                          + "ec2:AttachVolume",
+                          + "ec2:DetachVolume",
+                          + "ec2:ModifyVolume",
+                          + "ec2:DescribeAvailabilityZones",
+                          + "ec2:DescribeInstances",
+                          + "ec2:DescribeSnapshots",
+                          + "ec2:DescribeTags",
+                          + "ec2:DescribeVolumes",
+                          + "ec2:DescribeVolumesModifications",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:CreateTags",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "ec2:CreateAction" = [
+                                  + "CreateVolume",
+                                  + "CreateSnapshot",
+                                ]
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = [
+                          + "arn:aws:ec2:*:*:volume/*",
+                          + "arn:aws:ec2:*:*:snapshot/*",
+                        ]
+                    },
+                  + {
+                      + Action   = [
+                          + "ec2:DeleteTags",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = [
+                          + "arn:aws:ec2:*:*:volume/*",
+                          + "arn:aws:ec2:*:*:snapshot/*",
+                        ]
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:CreateVolume",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "aws:RequestTag/ebs.csi.aws.com/cluster" = "true"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:CreateVolume",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "aws:RequestTag/CSIVolumeName" = "*"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:DeleteVolume",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "ec2:ResourceTag/ebs.csi.aws.com/cluster" = "true"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:DeleteVolume",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "ec2:ResourceTag/CSIVolumeName" = "*"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:DeleteVolume",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "ec2:ResourceTag/kubernetes.io/created-for/pvc/name" = "*"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:DeleteSnapshot",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "ec2:ResourceTag/CSIVolumeSnapshotName" = "*"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                  + {
+                      + Action    = [
+                          + "ec2:DeleteSnapshot",
+                        ]
+                      + Condition = {
+                          + StringLike = {
+                              + "ec2:ResourceTag/ebs.csi.aws.com/cluster" = "true"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Resource  = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_policy.grafana_secrets_access will be created
+  + resource "aws_iam_policy" "grafana_secrets_access" {
+      + arn              = (known after apply)
+      + attachment_count = (known after apply)
+      + description      = "Allow Grafana to access Secrets Manager for admin credentials"
+      + id               = (known after apply)
+      + name             = "grafana-secretsmanager-access"
+      + name_prefix      = (known after apply)
+      + path             = "/"
+      + policy           = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "secretsmanager:GetSecretValue",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "arn:aws:secretsmanager:us-east-1:651706774390:secret:grafana-user-passwd-h2uIZ4"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + policy_id        = (known after apply)
+      + tags_all         = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role.alb_controller_role will be created
+  + resource "aws_iam_role" "alb_controller_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "aws-load-balancer-controller"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role.argocd_role will be created
+  + resource "aws_iam_role" "argocd_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "argocd-eks-management-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role.ebs_csi_driver_role will be created
+  + resource "aws_iam_role" "ebs_csi_driver_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "eks-ebs-csi-driver-irsa"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role.grafana_irsa will be created
+  + resource "aws_iam_role" "grafana_irsa" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "eks-grafana-irsa-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role.vpc_cni_irsa_role will be created
+  + resource "aws_iam_role" "vpc_cni_irsa_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "dev-gnpc-eks-cluster-vpc-cni-irsa"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags                  = {
+          + "Name" = "dev-gnpc-eks-cluster-vpc-cni-irsa"
+        }
+      + tags_all              = {
+          + "Name" = "dev-gnpc-eks-cluster-vpc-cni-irsa"
+        }
+      + unique_id             = (known after apply)
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.alb_controller_attach will be created
+  + resource "aws_iam_role_policy_attachment" "alb_controller_attach" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "aws-load-balancer-controller"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AdministratorAccess"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AmazonEKSComputePolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSComputePolicy"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/AmazonVPCFullAccess"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonVPCFullAccess"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.argocd_policies["arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"] will be created
+  + resource "aws_iam_role_policy_attachment" "argocd_policies" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+      + role       = "argocd-eks-management-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.ebs_csi_driver_attach will be created
+  + resource "aws_iam_role_policy_attachment" "ebs_csi_driver_attach" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "eks-ebs-csi-driver-irsa"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.grafana_secret_policy_attach will be created
+  + resource "aws_iam_role_policy_attachment" "grafana_secret_policy_attach" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "eks-grafana-irsa-role"
+    }
+
+  # module.iam_irsa.aws_iam_role_policy_attachment.vpc_cni_policy_attach["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"] will be created
+  + resource "aws_iam_role_policy_attachment" "vpc_cni_policy_attach" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "dev-gnpc-eks-cluster-vpc-cni-irsa"
+    }
+
+  # module.private_sg.aws_security_group.private_sg will be created
+  + resource "aws_security_group" "private_sg" {
+      + arn                    = (known after apply)
+      + description            = "Security group for Dev-GNPC-web"
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = "Allow all egress"
+              + from_port        = 0
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = []
+              + description      = "Allow traffic from bastion"
+              + from_port        = 22
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = (known after apply)
+              + self             = false
+              + to_port          = 22
+            },
+          + {
+              + cidr_blocks      = []
+              + description      = "Allow traffic from bastion"
+              + from_port        = 443
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "tcp"
+              + security_groups  = (known after apply)
+              + self             = false
+              + to_port          = 443
+            },
+        ]
+      + name                   = "Dev-GNPC-web-sg"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Environment" = "Dev"
+          + "Name"        = "Dev-GNPC-private-sg"
+        }
+      + tags_all               = {
+          + "Environment" = "Dev"
+          + "Name"        = "Dev-GNPC-private-sg"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.s3.aws_s3_bucket.log_bucket will be created
+  + resource "aws_s3_bucket" "log_bucket" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "dev-gnpc-log-bucket"
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = {
+          + "Name" = "Dev-GNPC-s3-log-bucket"
+        }
+      + tags_all                    = {
+          + "Name" = "Dev-GNPC-s3-log-bucket"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+    }
+
+  # module.s3.aws_s3_bucket.operations_bucket will be created
+  + resource "aws_s3_bucket" "operations_bucket" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "dev-gnpc-operations-bucket"
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = {
+          + "Name" = "Dev-GNPC-s3-bucket"
+        }
+      + tags_all                    = {
+          + "Name" = "Dev-GNPC-s3-bucket"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+    }
+
+  # module.s3.aws_s3_bucket.replication_bucket will be created
+  + resource "aws_s3_bucket" "replication_bucket" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "dev-gnpc-replication-bucket"
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = {
+          + "Name" = "Dev-GNPC-s3-replication-destination"
+        }
+      + tags_all                    = {
+          + "Name" = "Dev-GNPC-s3-replication-destination"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+    }
+
+  # module.s3.aws_s3_bucket_logging.operations_bucket_logging will be created
+  + resource "aws_s3_bucket_logging" "operations_bucket_logging" {
+      + bucket        = (known after apply)
+      + id            = (known after apply)
+      + target_bucket = (known after apply)
+      + target_prefix = "logs/"
+    }
+
+  # module.s3.aws_s3_bucket_policy.combined_logging_policy will be created
+  + resource "aws_s3_bucket_policy" "combined_logging_policy" {
+      + bucket = "dev-gnpc-log-bucket"
+      + id     = (known after apply)
+      + policy = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "s3:GetBucketAcl"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "config.amazonaws.com"
+                        }
+                      + Resource  = "arn:aws:s3:::dev-gnpc-log-bucket"
+                      + Sid       = "AWSConfigBucketPermissionsCheck"
+                    },
+                  + {
+                      + Action    = [
+                          + "s3:PutObject",
+                          + "s3:PutObjectAcl",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "651706774390"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "config.amazonaws.com"
+                        }
+                      + Resource  = "arn:aws:s3:::dev-gnpc-log-bucket/config-logs/*"
+                      + Sid       = "AWSConfigBucketDelivery"
+                    },
+                  + {
+                      + Action    = "s3:GetBucketAcl"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "delivery.logs.amazonaws.com"
+                        }
+                      + Resource  = "arn:aws:s3:::dev-gnpc-log-bucket"
+                      + Sid       = "VPCFlowLogsBucketPermissionsCheck"
+                    },
+                  + {
+                      + Action    = "s3:PutObject"
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "651706774390"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "delivery.logs.amazonaws.com"
+                        }
+                      + Resource  = "arn:aws:s3:::dev-gnpc-log-bucket/vpc-flow-logs/*"
+                      + Sid       = "VPCFlowLogsBucketDelivery"
+                    },
+                  + {
+                      + Action    = "s3:PutObject"
+                      + Condition = {
+                          + StringEquals = {
+                              + "s3:x-amz-acl" = "bucket-owner-full-control"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "cloudfront.amazonaws.com"
+                        }
+                      + Resource  = "arn:aws:s3:::dev-gnpc-log-bucket/cloudfront-logs/*"
+                      + Sid       = "AllowCloudFrontLogs"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+    }
+
+  # module.s3.aws_s3_bucket_versioning.versioning_log_bucket will be created
+  + resource "aws_s3_bucket_versioning" "versioning_log_bucket" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + versioning_configuration {
+          + mfa_delete = (known after apply)
+          + status     = "Enabled"
+        }
+    }
+
+  # module.s3.aws_s3_bucket_versioning.versioning_operations_bucket will be created
+  + resource "aws_s3_bucket_versioning" "versioning_operations_bucket" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + versioning_configuration {
+          + mfa_delete = (known after apply)
+          + status     = "Enabled"
+        }
+    }
+
+  # module.s3.aws_s3_bucket_versioning.versioning_replication_bucket will be created
+  + resource "aws_s3_bucket_versioning" "versioning_replication_bucket" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + versioning_configuration {
+          + mfa_delete = (known after apply)
+          + status     = "Enabled"
+        }
+    }
+
+  # module.vpc.aws_default_security_group.restrict_default will be created
+  + resource "aws_default_security_group" "restrict_default" {
+      + arn                    = (known after apply)
+      + description            = (known after apply)
+      + egress                 = [
+          + {
+              + cidr_blocks      = [
+                  + "0.0.0.0/0",
+                ]
+              + description      = ""
+              + from_port        = 0
+              + ipv6_cidr_blocks = [
+                  + "::/0",
+                ]
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+      + id                     = (known after apply)
+      + ingress                = [
+          + {
+              + cidr_blocks      = []
+              + description      = ""
+              + from_port        = 0
+              + ipv6_cidr_blocks = []
+              + prefix_list_ids  = []
+              + protocol         = "-1"
+              + security_groups  = []
+              + self             = false
+              + to_port          = 0
+            },
+        ]
+      + name                   = (known after apply)
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Environment" = "Dev"
+          + "Name"        = "dev-default-sg-restricted"
+          + "Project"     = "Startup"
+        }
+      + tags_all               = {
+          + "Environment" = "Dev"
+          + "Name"        = "dev-default-sg-restricted"
+          + "Project"     = "Startup"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.vpc.aws_eip.eip[0] will be created
+  + resource "aws_eip" "eip" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = (known after apply)
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "GNPC-Dev-eip"
+        }
+      + tags_all             = {
+          + "Name" = "GNPC-Dev-eip"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_flow_log.vpc_flow_logs[0] will be created
+  + resource "aws_flow_log" "vpc_flow_logs" {
+      + arn                      = (known after apply)
+      + id                       = (known after apply)
+      + log_destination          = (known after apply)
+      + log_destination_type     = "s3"
+      + log_format               = (known after apply)
+      + log_group_name           = (known after apply)
+      + max_aggregation_interval = 600
+      + tags                     = {
+          + "Environment" = "Dev"
+          + "Name"        = "dev-vpc-flow-logs"
+          + "Project"     = "Startup"
+        }
+      + tags_all                 = {
+          + "Environment" = "Dev"
+          + "Name"        = "dev-vpc-flow-logs"
+          + "Project"     = "Startup"
+        }
+      + traffic_type             = "ALL"
+      + vpc_id                   = (known after apply)
+    }
+
+  # module.vpc.aws_internet_gateway.igw will be created
+  + resource "aws_internet_gateway" "igw" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + owner_id = (known after apply)
+      + tags     = {
+          + "Name" = "GNPC-Dev-IGW"
+        }
+      + tags_all = {
+          + "Name" = "GNPC-Dev-IGW"
+        }
+      + vpc_id   = (known after apply)
+    }
+
+  # module.vpc.aws_nat_gateway.ngw[0] will be created
+  + resource "aws_nat_gateway" "ngw" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "GNPC-Dev-ngw"
+        }
+      + tags_all                           = {
+          + "Name" = "GNPC-Dev-ngw"
+        }
+    }
+
+  # module.vpc.aws_route_table.PrivateRT will be created
+  + resource "aws_route_table" "PrivateRT" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + carrier_gateway_id         = ""
+              + cidr_block                 = "0.0.0.0/0"
+              + core_network_arn           = ""
+              + destination_prefix_list_id = ""
+              + egress_only_gateway_id     = ""
+              + gateway_id                 = ""
+              + ipv6_cidr_block            = ""
+              + local_gateway_id           = ""
+              + nat_gateway_id             = (known after apply)
+              + network_interface_id       = ""
+              + transit_gateway_id         = ""
+              + vpc_endpoint_id            = ""
+              + vpc_peering_connection_id  = ""
+            },
+        ]
+      + tags             = {
+          + "Name" = "GNPC-Dev-Private-RT"
+        }
+      + tags_all         = {
+          + "Name" = "GNPC-Dev-Private-RT"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.PublicRT will be created
+  + resource "aws_route_table" "PublicRT" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + carrier_gateway_id         = ""
+              + cidr_block                 = "0.0.0.0/0"
+              + core_network_arn           = ""
+              + destination_prefix_list_id = ""
+              + egress_only_gateway_id     = ""
+              + gateway_id                 = (known after apply)
+              + ipv6_cidr_block            = ""
+              + local_gateway_id           = ""
+              + nat_gateway_id             = ""
+              + network_interface_id       = ""
+              + transit_gateway_id         = ""
+              + vpc_endpoint_id            = ""
+              + vpc_peering_connection_id  = ""
+            },
+        ]
+      + tags             = {
+          + "Name" = "GNPC-Dev-Public-RT"
+        }
+      + tags_all         = {
+          + "Name" = "GNPC-Dev-Public-RT"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.PrivateSubnetAssoc["0"] will be created
+  + resource "aws_route_table_association" "PrivateSubnetAssoc" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.PrivateSubnetAssoc["1"] will be created
+  + resource "aws_route_table_association" "PrivateSubnetAssoc" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.PublicSubnetAssoc["0"] will be created
+  + resource "aws_route_table_association" "PublicSubnetAssoc" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.PublicSubnetAssoc["1"] will be created
+  + resource "aws_route_table_association" "PublicSubnetAssoc" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private_subnet["0"] will be created
+  + resource "aws_subnet" "private_subnet" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.1.3.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                     = "GNPC-Dev-Private-Subnet-1"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/internal-elb"          = "1"
+        }
+      + tags_all                                       = {
+          + "Name"                                     = "GNPC-Dev-Private-Subnet-1"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/internal-elb"          = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private_subnet["1"] will be created
+  + resource "aws_subnet" "private_subnet" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.1.4.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                     = "GNPC-Dev-Private-Subnet-2"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/internal-elb"          = "1"
+        }
+      + tags_all                                       = {
+          + "Name"                                     = "GNPC-Dev-Private-Subnet-2"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/internal-elb"          = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public_subnet["0"] will be created
+  + resource "aws_subnet" "public_subnet" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.1.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                     = "GNPC-Dev-Public-Subnet-1"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/elb"                   = "1"
+        }
+      + tags_all                                       = {
+          + "Name"                                     = "GNPC-Dev-Public-Subnet-1"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/elb"                   = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public_subnet["1"] will be created
+  + resource "aws_subnet" "public_subnet" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.1.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name"                                     = "GNPC-Dev-Public-Subnet-2"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/elb"                   = "1"
+        }
+      + tags_all                                       = {
+          + "Name"                                     = "GNPC-Dev-Public-Subnet-2"
+          + "kubernetes.io/cluster/effulgencetech-dev" = "shared"
+          + "kubernetes.io/role/elb"                   = "1"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_vpc.vpc will be created
+  + resource "aws_vpc" "vpc" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.1.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + tags                                 = {
+          + "Name" = "GNPC-Dev-vpc"
+        }
+      + tags_all                             = {
+          + "Name" = "GNPC-Dev-vpc"
+        }
+    }
+
+Plan: 98 to add, 0 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan.out
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan.out"
