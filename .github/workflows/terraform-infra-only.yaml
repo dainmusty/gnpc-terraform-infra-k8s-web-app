@@ -15,12 +15,6 @@ on:
         options:
           - "plan"
           - "apply"
-          - "destroy"
-      confirm_destroy:
-        description: "Type YES to confirm destroy (for safety)"
-        required: false
-        default: "NO"
-        type: string
       skip_nochange:
         description: "Apply even if no change is reported in the plan"
         required: false
@@ -181,13 +175,13 @@ jobs:
         run: rm -f pr_body.md tfplan.txt
 
 # =====================================================
-# 4️⃣ MANUAL APPLY OR DESTROY
+# 4️⃣ MANUAL APPLY
 # =====================================================
   Apply:
-    name: Manual Terraform Apply or Destroy
+    name: Manual Terraform Apply
     needs: Approve
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
 
     steps:
       - uses: actions/checkout@v4
@@ -208,31 +202,15 @@ jobs:
         working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform init -input=false
 
-      - name: Terraform Apply or Destroy
+      - name: Terraform Apply
         working-directory: ${{ env.DEPLOYMENT_PATH }}
-        run: |
-          if [ "${{ github.event.inputs.terraform_action }}" = "apply" ]; then
-            echo "🚀 Running Terraform Apply..."
-            terraform apply -auto-approve
-          elif [ "${{ github.event.inputs.terraform_action }}" = "destroy" ]; then
-            if [ "${{ github.event.inputs.confirm_destroy }}" != "YES" ]; then
-              echo "⚠️ Destroy not confirmed — exiting safely."
-              exit 1
-            fi
-            echo "💣 Running Terraform Destroy..."
-            terraform destroy -auto-approve
-          else
-            echo "❌ Invalid action '${{ github.event.inputs.terraform_action }}'."
-            exit 1
-          fi
+        run: terraform apply -auto-approve
 
       - name: Update kubeconfig for EKS
-        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
       - name: Wait for ALB & Export DNS
-        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         run: |
           echo "Waiting for ALB provisioning..."
           for i in {1..30}; do
@@ -247,7 +225,6 @@ jobs:
           done
 
       - name: Upload ALB DNS as Artifact
-        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         uses: actions/upload-artifact@v4
         with:
           name: alb-info
