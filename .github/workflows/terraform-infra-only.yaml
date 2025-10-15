@@ -1,37 +1,46 @@
-name: Terraform CI/CD Pipeline
+name: Terraform Infra | K8s Deployment | CICD
 
 on:
-  workflow_dispatch:
-    inputs:
-      action:
-        description: "Select Terraform action"
-        required: true
-        default: "apply"
-        type: choice
-        options:
-          - apply
-          - destroy
-      confirm:
-        description: "Type YES to confirm destroy (for safety)"
-        required: false
-        default: "NO"
-
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+      - "*" # Run on push to any feature branch
+
+  workflow_dispatch:
+    inputs:
+      terraform_action:
+        description: "Select the terraform action to perform"
+        required: true
+        type: choice
+        options:
+          - "plan"
+          - "apply"
+          - "destroy"
+      confirm_destroy:
+        description: "Type YES to confirm destroy (for safety)"
+        required: false
+        default: "NO"
+        type: string
+      skip_nochange:
+        description: "Apply even if no change is reported in the plan"
+        required: false
+        type: boolean
 
 env:
   AWS_REGION: us-east-1
   CLUSTER_NAME: effulgencetech-dev
   SONAR_PROJECT_KEY: dainmusty_gnpc-terraform-infra-k8s-web-app
   SONAR_ORGANIZATION: effulgencetech
+  DEPLOYMENT_PATH: root-modules/env/dev
 
-# ======================
-# 1️⃣ SECURITY SCANS
-# ======================
+permissions:
+  packages: write
+  contents: read
+  id-token: write
+
+# =====================================================
+# 1️⃣ SECURITY SCANS (TRIVY + OWASP + SONARCLOUD)
+# =====================================================
 jobs:
   security-scan:
     name: Run Security Scans (Trivy + OWASP + SonarCloud)
@@ -93,10 +102,10 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
 
-# ======================
+# =====================================================
 # 2️⃣ TERRAFORM PLAN
-# ======================
-  terraform-plan:
+# =====================================================
+  Plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
     needs: [security-scan, sonarcloud]
@@ -104,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
@@ -117,79 +126,73 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: root-modules/env/dev
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform init -input=false
 
       - name: Terraform Plan
-        working-directory: root-modules/env/dev
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform plan -no-color -out=tfplan.out | tee tfplan.txt
 
       - name: Upload Terraform Plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
-          path: root-modules/env/dev/tfplan.txt
+          path: ${{ env.DEPLOYMENT_PATH }}/tfplan.txt
 
-# ======================
-# 3️⃣ CREATE PULL REQUEST FOR PLAN REVIEW
-# ======================
-  create-pr:
-   name: Create or Update Pull Request
-   runs-on: ubuntu-latest
-   needs: terraform-plan
-
-   steps:
-    - uses: actions/checkout@v4
-
-    - name: Download Terraform Plan Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: terraform-plan
-        path: ./
-
-    # ✅ Generate PR body file dynamically
-    - name: Generate PR Body File
-      run: |
-        echo "## Terraform Plan Summary" > pr_body.md
-        echo '```' >> pr_body.md
-        cat tfplan.txt | head -n 200 >> pr_body.md
-        echo '```' >> pr_body.md
-
-    # ✅ Create Pull Request with plan summary
-    - name: Create Pull Request with Plan Summary
-      uses: peter-evans/create-pull-request@v6
-      with:
-        token: ${{ secrets.GH_PAT }}
-        commit-message: "Terraform plan results"
-        title: "Terraform Plan Review"
-        body-path: pr_body.md
-        base: main
-        branch: infra-plan-review-${{ github.run_id }}   # 🔁 unique branch per run
-        delete-branch: true                               # auto-cleanup old branches
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        draft: false
-
-    # 🧹 Optional cleanup
-    - name: Cleanup temporary files
-      run: rm -f pr_body.md tfplan.txt
-    # 👇 adds dropdown choice when running manually
-    # inputs moved to workflow_dispatch above
-
-
-# ======================
-# 4️⃣ MANUAL APPLY OR DESTROY (AFTER MERGE)
-# ======================
-  terraform-action:
-    name: Manual Terraform Apply or Destroy
+# =====================================================
+# 3️⃣ CREATE OR UPDATE PR FOR PLAN REVIEW
+# =====================================================
+  Approve:
+    name: Create or Update Pull Request
+    needs: Plan
     runs-on: ubuntu-latest
-    needs: create-pr
-    if: github.event_name == 'workflow_dispatch' # Only run manually
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Terraform
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: ./  
+
+      - name: Generate PR Body File
+        run: |
+          echo "## Terraform Plan Summary" > pr_body.md
+          echo '```' >> pr_body.md
+          cat tfplan.txt | head -n 200 >> pr_body.md
+          echo '```' >> pr_body.md
+
+      - name: Create Pull Request with Plan Summary
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_PAT }}
+          commit-message: "Terraform plan results"
+          title: "Terraform Plan Review"
+          body-path: pr_body.md
+          base: main
+          branch: infra-plan-review-${{ github.run_id }}
+          delete-branch: true
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          draft: false
+
+      - name: Cleanup temporary files
+        run: rm -f pr_body.md tfplan.txt
+
+# =====================================================
+# 4️⃣ MANUAL APPLY OR DESTROY
+# =====================================================
+  Apply:
+    name: Manual Terraform Apply or Destroy
+    needs: Approve
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
@@ -202,34 +205,34 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: root-modules/env/dev
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: terraform init -input=false
 
       - name: Terraform Apply or Destroy
-        working-directory: root-modules/env/dev
+        working-directory: ${{ env.DEPLOYMENT_PATH }}
         run: |
-          if [ "${{ github.event.inputs.action }}" = "apply" ]; then
+          if [ "${{ github.event.inputs.terraform_action }}" = "apply" ]; then
             echo "🚀 Running Terraform Apply..."
             terraform apply -auto-approve
-          elif [ "${{ github.event.inputs.action }}" = "destroy" ]; then
-            if [ "${{ github.event.inputs.confirm }}" != "YES" ]; then
+          elif [ "${{ github.event.inputs.terraform_action }}" = "destroy" ]; then
+            if [ "${{ github.event.inputs.confirm_destroy }}" != "YES" ]; then
               echo "⚠️ Destroy not confirmed — exiting safely."
               exit 1
             fi
             echo "💣 Running Terraform Destroy..."
             terraform destroy -auto-approve
           else
-            echo "❌ Invalid action '${{ github.event.inputs.action }}'."
+            echo "❌ Invalid action '${{ github.event.inputs.terraform_action }}'."
             exit 1
           fi
 
       - name: Update kubeconfig for EKS
-        if: ${{ github.event.inputs.action == 'apply' }}
+        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
       - name: Wait for ALB & Export DNS
-        if: ${{ github.event.inputs.action == 'apply' }}
+        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         run: |
           echo "Waiting for ALB provisioning..."
           for i in {1..30}; do
@@ -244,21 +247,20 @@ jobs:
           done
 
       - name: Upload ALB DNS as Artifact
-        if: ${{ github.event.inputs.action == 'apply' }}
+        if: ${{ github.event.inputs.terraform_action == 'apply' }}
         uses: actions/upload-artifact@v4
         with:
           name: alb-info
           path: alb_info.txt
 
-
-# ======================
-# 5️⃣ ARGOCD DEPLOYMENT (AFTER APPLY)
-# ======================
-  deploy-k8s:
+# =====================================================
+# 5️⃣ K8S DEPLOYMENT (AFTER APPLY)
+# =====================================================
+  Deploy:
     name: Deploy K8S Manifest Files
+    needs: Apply
     runs-on: ubuntu-latest
-    needs: terraform-action
-    if: ${{ github.event.inputs.action == 'apply' }} # only if 'apply' chosen
+    if: ${{ github.event.inputs.terraform_action == 'apply' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -269,8 +271,7 @@ jobs:
           git config user.email github-actions[bot]@users.noreply.github.com
 
       - name: Pull latest before pushing
-        run: |
-          git pull --rebase origin main
+        run: git pull --rebase origin main
 
       - name: Push changes
         env:
@@ -278,4 +279,3 @@ jobs:
         run: |
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/dainmusty/gnpc-terraform-infra-k8s-web-app.git
           git push origin main
-

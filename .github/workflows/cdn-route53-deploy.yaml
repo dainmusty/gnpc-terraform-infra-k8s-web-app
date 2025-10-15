@@ -1,57 +1,57 @@
-name: CDN & Route53 Deployment
+# name: CDN & Route53 Deployment
 
-on:
-  workflow_run:
-    workflows: ["Full CI/CD Pipeline"]   # Must exactly match your Terraform workflow name
-    types:
-      - completed
+# on:
+#   workflow_run:
+#     workflows: ["Full CI/CD Pipeline"]   # Must exactly match your Terraform workflow name
+#     types:
+#       - completed
 
-jobs:
-  deploy-cdn-route53:
-    name: Deploy CloudFront + Route53
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+# jobs:
+#   deploy-cdn-route53:
+#     name: Deploy CloudFront + Route53
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
+#       - name: Set up Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.6.6
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-1
 
-      - name: Download ALB DNS Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: alb-info
+#       - name: Download ALB DNS Artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: alb-info
 
-      - name: Display ALB DNS
-        run: cat alb_info.txt
+#       - name: Display ALB DNS
+#         run: cat alb_info.txt
 
-      - name: Terraform Init for CDN and Route53
-        working-directory: root-modules/hosted-zone
-        run: terraform init -input=false
+#       - name: Terraform Init for CDN and Route53
+#         working-directory: root-modules/hosted-zone
+#         run: terraform init -input=false
 
-      - name: Domain Registration, Hosted Zone, CloudFront, and Route53 Apply
-        working-directory: root-modules/hosted-zone
-        run: |
-          ALB_DNS=$(cat alb_info.txt)
-          terraform apply -auto-approve -var="alb_dns_name=${ALB_DNS}"
+#       - name: Domain Registration, Hosted Zone, CloudFront, and Route53 Apply
+#         working-directory: root-modules/hosted-zone
+#         run: |
+#           ALB_DNS=$(cat alb_info.txt)
+#           terraform apply -auto-approve -var="alb_dns_name=${ALB_DNS}"
 
-      - name: Verify CloudFront Distribution
-        run: |
-          echo "Fetching CloudFront Distribution details..."
-          aws cloudfront list-distributions --query "DistributionList.Items[*].{Id:Id, DomainName:DomainName}" --output table
+#       - name: Verify CloudFront Distribution
+#         run: |
+#           echo "Fetching CloudFront Distribution details..."
+#           aws cloudfront list-distributions --query "DistributionList.Items[*].{Id:Id, DomainName:DomainName}" --output table
 
-      - name: Verify Route53 Record
-        run: |
-          echo "Checking Route53 DNS records..."
-          aws route53 list-hosted-zones-by-name
+#       - name: Verify Route53 Record
+#         run: |
+#           echo "Checking Route53 DNS records..."
+#           aws route53 list-hosted-zones-by-name
