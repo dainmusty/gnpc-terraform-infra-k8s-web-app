@@ -225,7 +225,7 @@ jobs:
 # 5️⃣ ARGOCD DEPLOYMENT (AFTER APPLY)
 # ======================
   deploy-k8s:
-    name: ArgoCD Sync
+    name: Deploy K8S Manifest Files
     runs-on: ubuntu-latest
     needs: terraform-apply  # ✅ fixed dependency name
 
