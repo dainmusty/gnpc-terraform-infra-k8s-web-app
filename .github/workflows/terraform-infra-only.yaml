@@ -118,42 +118,46 @@ jobs:
 # 3️⃣ CREATE PULL REQUEST FOR PLAN REVIEW
 # ======================
   create-pr:
-    name: Create or Update Pull Request
-    runs-on: ubuntu-latest
-    needs: terraform-plan
+   name: Create or Update Pull Request
+   runs-on: ubuntu-latest
+   needs: terraform-plan
 
-    steps:
-      - uses: actions/checkout@v4
+   steps:
+    - uses: actions/checkout@v4
 
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-          path: ./  # downloads tfplan.txt into the workspace
+    - name: Download Terraform Plan Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: terraform-plan
+        path: ./
 
-      # ✅ Generate PR body file
-      - name: Generate PR Body File
-        run: |
-          echo "## Terraform Plan Summary" > pr_body.md
-          echo '```' >> pr_body.md
-          cat tfplan.txt | head -n 200 >> pr_body.md
-          echo '```' >> pr_body.md
-          ls -la  # debug confirmation that pr_body.md exists
+    # ✅ Generate PR body file dynamically
+    - name: Generate PR Body File
+      run: |
+        echo "## Terraform Plan Summary" > pr_body.md
+        echo '```' >> pr_body.md
+        cat tfplan.txt | head -n 200 >> pr_body.md
+        echo '```' >> pr_body.md
 
-      # ✅ Create or update PR (only once)
-      - name: Create Pull Request with Plan Summary
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GH_PAT }}
-          commit-message: "Terraform plan results"
-          title: "Terraform Plan Review"
-          body-path: pr_body.md
-          base: main
-          branch: infra-plan-review
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          delete-branch: false
-          draft: false
+    # ✅ Create Pull Request with plan summary
+    - name: Create Pull Request with Plan Summary
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GH_PAT }}
+        commit-message: "Terraform plan results"
+        title: "Terraform Plan Review"
+        body-path: pr_body.md
+        base: main
+        branch: infra-plan-review-${{ github.run_id }}   # 🔁 unique branch per run
+        delete-branch: true                               # auto-cleanup old branches
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        draft: false
+
+    # 🧹 Optional cleanup
+    - name: Cleanup temporary files
+      run: rm -f pr_body.md tfplan.txt
+
 
 
 
