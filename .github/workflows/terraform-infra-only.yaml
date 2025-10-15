@@ -129,21 +129,30 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan
-          path: ./
+          path: ./  # this downloads tfplan.txt into the workspace
+
+      # ✅ Generate PR body file
+      - name: Generate PR Body File
+        run: |
+          echo "## Terraform Plan Summary" > pr_body.md
+          echo '```' >> pr_body.md
+          cat tfplan.txt | head -n 200 >> pr_body.md
+          echo '```' >> pr_body.md
 
       - name: Create Pull Request with Plan Summary
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GH_PAT }}   # ✅ Use your PAT with repo permissions
+          token: ${{ secrets.GH_PAT }}
           commit-message: "Terraform plan results"
           title: "Terraform Plan Review"
-          body-path: pr_body.md
+          body-path: pr_body.md   # ✅ Now this file exists
           base: main
           branch: infra-plan-review
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           delete-branch: false
           draft: false
+
 
 
 
