@@ -1,539 +1,221 @@
-# Enterprise Terraform Infrastructure Framework
+# DevSecOps GitHub Actions Pipeline
 
-This repository contains a standard cloud infrastructure design for enterprise-scale applications, built with Terraform on AWS. The goal is to provide a reusable, secure, and automated infrastructure framework that accelerates deployments while maintaining strong governance and scalability.
+This project demonstrates how modern platform and DevOps teams build **secure CI/CD pipelines** that integrate security, infrastructure provisioning, and GitOps-based Kubernetes deployments.
 
-Key Features
+The pipeline automates the full delivery workflow:
 
-Kubernetes Orchestration (EKS)
+• Security scanning of the codebase  
+• Infrastructure provisioning using Terraform  
+• Kubernetes platform deployment on Amazon EKS  
+• GitOps-based application delivery using ArgoCD  
 
-Fully managed Amazon EKS cluster for container workloads.
+The goal of this project is to simulate how **enterprise platform teams implement DevSecOps practices** to ensure that infrastructure and application deployments remain secure, automated, and repeatable.
 
-Addons: Grafana, Prometheus, ArgoCD (GitOps), ALB Controller, EBS CSI driver.
+---
 
-Supports frontend, backend, and database tiers with Kubernetes secrets for ECR and DB credentials.
+# Architecture Overview
 
-AWS Services Provisioned via Terraform
+The pipeline integrates multiple components into a single automated workflow.
 
-RDS for relational databases.
+Developer Push → Security Scanning → Code Quality Analysis → Infrastructure Deployment → Kubernetes Platform Deployment → GitOps Synchronization
 
-IAM with hardened roles and guardrails.
+Key technologies used:
 
-S3 for storage, KMS for encryption, CloudFront for global distribution, Route53 for DNS, AWS Config for compliance.
+• GitHub Actions for CI/CD automation  
+• Terraform for infrastructure provisioning  
+• Amazon EKS for container orchestration  
+• ArgoCD for GitOps application delivery  
+• Prometheus and Grafana for observability  
 
-Security & Compliance
+---
 
-Enforced IAM policies and KMS key management.
+# Pipeline Workflow
 
-Integrated GuardDuty, WAF, Shield, and AWS Config for threat detection and governance.
+The pipeline is triggered automatically when:
 
-CI/CD & DevSecOps Integration
+• Code is pushed to the **main branch**
+• A **pull request** is created
 
-GitHub Actions pipelines with pre-commit hooks.
+The workflow executes multiple stages to enforce security, quality, and deployment automation.
 
-Integrated SonarQube, OWASP, and Trivy for code quality, dependency, and vulnerability scanning.
+---
 
-Automated Docker image builds and ECR publishing.
+# Stage 1: Security Scanning
 
-Infrastructure as Code (IaC) Design via Terraform
+Security is embedded directly into the CI pipeline using multiple scanning tools.
 
-Modular Terraform setup with root and child modules (EKS, IAM, RDS, S3, Route53, KMS, etc.).
+### Trivy Filesystem Scan
 
-Multi-environment deployments (dev, staging, prod) with consistent workflows.
+Trivy scans the repository for:
 
-Extensible and reusable design for future projects.
+• Infrastructure misconfigurations  
+• Vulnerabilities in dependencies  
+• Security risks within the codebase
 
-Impact
+Only **high and critical vulnerabilities** are flagged during scanning.
 
-This framework improves:
+---
 
-Deployment speed with automation.
+### OWASP Dependency Check
 
-Environment consistency across teams and accounts.
+OWASP Dependency-Check analyzes project dependencies and detects known vulnerabilities.
 
-Cost efficiency with reusable modules.
+Features:
 
-Security posture with compliance guardrails and monitoring.
+• CVE database scanning  
+• Automated vulnerability reporting  
+• Pipeline failure if vulnerabilities exceed CVSS threshold
 
+The generated security report is uploaded as a pipeline artifact.
 
+---
 
-Getting Started
-Prerequisites
+# Stage 2: Code Quality Analysis
 
-Terraform
- >= 1.5
+The pipeline integrates **SonarCloud** for automated code analysis.
 
-AWS CLI
- configured with appropriate profiles
+SonarCloud provides:
 
-kubectl
- for EKS interaction
+• static code analysis  
+• code quality metrics  
+• technical debt analysis  
+• maintainability scoring
 
-Helm
- for managing Kubernetes addons
+This ensures that code quality standards are enforced before infrastructure or application deployment.
 
-Pre-commit hooks installed:
+---
 
-pre-commit install
+# Stage 3: Infrastructure Deployment
 
-Setup
+Infrastructure provisioning is handled using **Terraform**.
 
-Clone the repository
+The pipeline automatically:
 
-git clone https://github.com/<your-org>/<your-repo>.git
-cd <your-repo>
+• initializes Terraform  
+• validates infrastructure code  
+• provisions AWS resources  
+• deploys the Amazon EKS cluster
 
+Resources provisioned include:
 
-Initialize Terraform
+• Amazon EKS cluster  
+• worker node groups  
+• IAM roles and permissions  
+• networking configuration
 
-terraform init
+This ensures infrastructure can be deployed consistently across environments.
 
+---
 
-Select the environment (dev, staging, prod)
+# Stage 4: Kubernetes Platform Initialization
 
-cd environments/dev
+After the EKS cluster is created, the pipeline configures Kubernetes access and verifies that platform services are operational.
 
+Key tasks include:
 
-Validate and plan
+• updating the Kubernetes kubeconfig  
+• verifying ArgoCD deployment  
+• waiting for platform services to become ready
 
-terraform validate
-terraform plan
+This guarantees that the Kubernetes control plane and platform tools are functioning before application deployment begins.
 
+---
 
-Apply infrastructure
+# Stage 5: Load Balancer Provisioning
 
-terraform apply
+The pipeline waits for the **AWS Application Load Balancer** to be created through Kubernetes Ingress resources.
 
-CI/CD Workflow
+Once available, the ALB DNS endpoint is exported and stored as a pipeline artifact for later use.
 
-Pre-commit hooks ensure formatting, linting, and security checks:
+---
 
-terraform fmt
+# Stage 6: GitOps Deployment
 
-tflint
+Application deployment is managed through **ArgoCD GitOps synchronization**.
 
-checkov
+The pipeline automatically pushes updates to the GitOps repository.
 
-trivy
+ArgoCD then:
 
-sonarqube
+• detects the changes  
+• synchronizes Kubernetes manifests  
+• deploys applications to the cluster
 
-GitHub Actions automates:
+This approach ensures:
 
-Terraform plan & apply
+• declarative deployments  
+• automatic reconciliation  
+• environment consistency
 
-Security scans
+---
 
-Docker image builds & ECR publishing
+# DevSecOps Principles Implemented
 
-GitOps delivery with ArgoCD
+This project demonstrates several key DevSecOps principles.
 
+### Shift Security Left
 
-.
-├── environments/         # Root modules for dev, staging, prod
-│   ├── dev/
-│   ├── staging/
-│   └── prod/
-│
-├── modules/              # Reusable child modules
-│   ├── eks/              # EKS cluster provisioning
-│   ├── rds/              # RDS database
-│   ├── iam/              # IAM roles and policies
-│   ├── s3/               # S3 storage
-│   ├── kms/              # KMS key management
-│   ├── route53/          # DNS management
-│   ├── cloudfront/       # CDN distribution
-│   └── config/           # AWS Config rules
-│
-├── scripts/              # User data scripts (e.g., Docker install)
-├── .github/workflows/    # GitHub Actions CI/CD pipelines
-├── .pre-commit-config.yaml # Pre-commit hooks (fmt, tflint, checkov, trivy, sonar)
-└── README.md
+Security scanning occurs early in the pipeline before infrastructure or application deployment.
 
+### Infrastructure as Code
 
-Contributing
+All infrastructure is defined using Terraform, ensuring repeatable and auditable deployments.
 
-We welcome contributions to improve this framework. Please follow the steps below:
+### GitOps Delivery
 
-Fork the repository and create a feature branch:
+Kubernetes deployments are managed declaratively through Git using ArgoCD.
 
-git checkout -b feature/my-feature
+### Automated Platform Provisioning
 
+The entire Kubernetes platform can be deployed automatically through the pipeline.
 
-Run pre-commit hooks before committing:
+### Continuous Compliance
 
-pre-commit run --all-files
+Security and quality checks run on every commit.
 
+---
 
-This ensures formatting, linting, and security checks (Terraform fmt, TFLint, Checkov, Trivy, SonarQube) pass before submission.
+# Example Pipeline Flow
 
-Submit a Pull Request (PR) with a clear description of your changes.
+```
+Developer Commit
+        ↓
+GitHub Actions Trigger
+        ↓
+Trivy Security Scan
+        ↓
+OWASP Dependency Check
+        ↓
+SonarCloud Code Analysis
+        ↓
+Terraform Infrastructure Deployment
+        ↓
+EKS Cluster Creation
+        ↓
+Kubernetes Platform Initialization
+        ↓
+ArgoCD GitOps Deployment
+```
 
-Reference any issues being fixed.
+---
 
-Ensure CI/CD pipelines pass.
+# Outcome
 
-Code Review
+This pipeline demonstrates how organizations can implement **enterprise-grade DevSecOps automation** by combining security scanning, infrastructure provisioning, and GitOps delivery in a single workflow.
 
-PRs will be reviewed for consistency, security, and best practices.
+The result is a secure and repeatable deployment pipeline capable of provisioning infrastructure and deploying applications automatically.
 
-Approved PRs will be merged into main after review.
+---
 
-⚡ With this framework, enterprises can deploy faster, remain secure, and scale confidently on AWS using Terraform and GitOps best practices.
+# Technologies Used
 
-# Enterprise with EKS + GitOps Summary
-Use case: This pipeline is built for enterprises deploying full Kubernetes infrastructure using EKS and GitOps via ArgoCD.
-
-🔧 Stack Overview
-Infrastructure: EKS (via Terraform)
-GitOps Tool: ArgoCD
-Monitoring: kube-prometheus-stack (Prometheus + Grafana via Helm)
-Security Scans: Trivy, OWASP, SonarCloud
-
-
-# Steps to note
-1. Design your  terraform directory structure. Setup your root module for your environments (dev,staging and prod) and your resuable child modules. Below is the directory structure
-
-├── environments/         # Root modules for dev, staging, prod
-│   ├── dev/
-│   ├── staging/
-│   └── prod/
-│
-├── modules/              # Reusable child modules
-│   ├── eks/              # EKS cluster provisioning
-│   ├── rds/              # RDS database
-│   ├── iam/              # IAM roles and policies
-│   ├── s3/               # S3 storage
-│   ├── kms/              # KMS key management
-│   ├── route53/          # DNS management
-│   ├── cloudfront/       # CDN distribution
-│   └── config/           # AWS Config rules
-│
-├── scripts/              # User data scripts (e.g., Docker install)
-├── .github/workflows/    # GitHub Actions CI/CD pipelines
-├── .pre-commit-config.yaml # Pre-commit hooks (fmt, tflint, checkov, trivy, sonar)
-└── README.md
-
-
-2. Start with your IAM roles and policies for your child modules that require permissions(best practice). Add permission boundaries to ensure least privilege access. Create a role and call it "terraform-role". Create an OIDC provider for github(use the youtube video link below to guide you) for a Federated User. Attach the oidc policy or permissions to the terraform role. The policy will give the terraform role the least access privilege. This adds another security layer for github to access your aws account through the oidc Fed provider. see below the oidc policy to be attached to the terraform role.
-
-2. Build your EKS module; there are serveral options. You can use terraform directly or use cloudformation to build your EKS and nodegroup stack. You can then use cloudformation to deploy the stacks together.
-
-3. As best practice, add the ff. to be installed on the EKS for cluster management.
-# ALB controller to allow an ALB to be provisioned via the ingress k8s manifest file
-# Argocd for gitOps operations. This will automatically handle your container(k8s) apps of apps
-# EBS CSI Driver - This will aid in provisioning additional EBS volumes for your nodes
-# Prometheus-Grafana Stack - This pack will install both prometheus and grafana on the cluster and accessed by your ingress. It is best practice to access it locally though via your localhost
-# VPC CNI Driver is required for your EKS to be successfully deployed. It needs to be part of your addons.
-# Setup the above-mentioned addons as reuseable modules so that it is easily maintained
-# NB: Your EKS cluster will come with its own VPC and EC2s(nodes), thus you don't need  VPC and EC2 modules.
-
-4. Build the rest of your child modules including S3, KMS, Config, RDS, CloudFront and Route53. Ensure each module is attached to the its IAM role with descriptions for team members to easily understand and reuse.
-
-5. Reference the modules that are connected and test them one after the other as you build and add on.
-
-6. Create a separate directory for your k8s manifest files and organise the frontend, backend and db tiers in separate directories. Below is how your k8s files should be setup.
-k8s/
-├── bootstrap/  # ArgoCD root applications for each environment
-│   ├── apps/
-│   │   ├── shared-app.yml
-│   │   └── app-dev.yml
-│   ├── root-app-dev.yml    # ArgoCD App pointing to apps/dev (dev workloads)    
-│   └── root-app-prod.yml   # ArgoCD App pointing to apps/prod (prod workloads)
-├── shared/                 # Common resources shared by all apps/environments
-│   ├── configmap.yml       # Shared config (e.g., mongo URL)
-│   ├── secrets.yml         # Shared secrets (e.g., MongoDB credentials)
-│   └── namespace.yml
-└── apps/                   # Application workloads grouped by environment
-    ├── dev/
-    │   ├── web-app/        # Web frontend microservice
-    │   ├── token-app/
-    │   └── mongo/          # MongoDB deployment (not exposed via Ingress)
-    └── prod/
-
-# GitOps 
-Your applications or microservices share certain k8s files including configmaps, secrets and namespace. You should have one directory for shared files.
-✅ ArgoCD App of Apps Structure
-
-* `bootstrap/root-app-dev.yml`: Defines ArgoCD root application pointing to `apps/`.
-* `apps/shared-app.yml`: Deploys ConfigMaps, Secrets, and Namespace common to all applications.
-* `apps/app-dev.yml`: Deploys individual dev apps (web, token, mongo) under the shared namespace.
-
-# How to access your argocd
-
-7. Install pre-commit and checkov. Just like gitignore, create config files to override checkov and pre-commit errors that are deprecated or not threatening. See examples below.
-
-# Pre-commit
-.checkov.yml
-framework: terraform
-
-skip-check:
-  - CKV2_AWS_62     # Event notifications not required for log bucket
-  - CKV_AWS_290     # Acceptable write access in dev for flow logs
-  - CKV_AWS_145     # SSE-KMS not enforced in dev
-  - CKV_AWS_144     # Cross-region replication not required for dev logs
-  - CKV2_AWS_11     # VPC flow logs are handled dynamically
-  - CKV_AWS_300     # Lifecycle rule handles abort incomplete uploads
-  - CKV2_AWS_12     # Default SG restricted via module logic
-
-
-.pre-commit-config.yml
-repos:
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.100.0
-    hooks:
-      - id: terraform_fmt
-      - id: terraform_tflint
-      # remove terraform_checkov since we’ll use the official Checkov hook
-
-  - repo: https://github.com/bridgecrewio/checkov
-    rev: 3.2.471   # pin latest stable
-    hooks:
-      - id: checkov
-        args: [--quiet, -d, .]   # optional: make it match your CLI usage
-
-8. You can choose to install sonarqube and checkov locally to check your code quality or you can include it in your git workflow to use sonarcloud(scan on build). Depending on the language or application code, you can get the sonarqube job from git marketplace. Below are sonarqube and checkov jobs used for this project workflow. 
-
-checkov:
-    name: Run Checkov
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Checkov Scan
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: .
-          quiet: true
-          soft_fail: false
-
-  sonarcloud:
-    name: Run SonarCloud Code Quality Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install SonarCloud Scanner
-        run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip -q sonar-scanner.zip
-          echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-      - name: SonarCloud Scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-            -Dsonar.organization=${SONAR_ORGANIZATION} \
-            -Dsonar.branch.name=${GITHUB_REF_NAME} \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN
-
-
-# Sonarcloud Setup
-Go to the sonarcloud website and register. You can also login with you github account and it automatically connects with your repos.
-Once you are logged in, create an organisation and add your repos as projects. This will automatically generate the project key (SONAR_PROJECT_KEY) and (SONAR_ORGANIZATION) which you can define as environmental variables in your workflow. eg.
-env:
-  TF_VAR_management_account_id: ${{ secrets.AWS_MANAGEMENT_ACCOUNT_ID }}
-  TF_VAR_dev_account_id: ${{ secrets.AWS_DEV_ACCOUNT_ID }}
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  SONAR_PROJECT_KEY: dainmusty_MULTI-VPC-INTER-REGION-TGW
-  SONAR_ORGANIZATION: effulgencetech
-
-
-# Git Actions setup
-9. Create a directory called .github , inside that directory, create another directory and call it workflows. Now create a yaml file inside workflows, you can give it any name. eg. terraform-apply-manual-destroy.yaml.
-
-10. Define your workflow. The components of the workflow will depend on what expected in the project. For example, in this project, we want CICD of k8s microservices which is to be deployed by terraform and managed by argoCD. The workflow can be sectioned into 3 parts. 
-Part 1 - trigger upon git push to a feature branch say dev
-Part 2 - defining your environmental variables
-Part 3 - actual jobs which includes the code scans, infra deployment and GitOps activities. eg. terraform plan,apply and manual destroy, k8s manifest files deployment by argocd. scans include code quality, code vulnerability, code dependency and k8s image scans.
-Part 4 - Configuring credentials
-See below the workflow for this project.
-
-Part 1 - Trigger upon push
-# name: Full CI/CD Pipeline
-
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-
-Part 2 - defining your environmental variables
- 
-# env:
-#   AWS_REGION: us-east-1
-#   CLUSTER_NAME: dev_eks_cluster
-#   SONAR_PROJECT_KEY: dainmusty_ENTERPRISE-BUSINESS-TERRAFORM-INFRA
-#   SONAR_ORGANIZATION: effulgencetech
-
-Part 3 - scans; it could be code quality, code vulnerability, code dependency and k8s image scans.
-# jobs:
-#   security-scan:
-#     name: Run Security Scans (Trivy + OWASP + SonarCloud)
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-
-#       - name: Trivy Filesystem Scan
-#         uses: aquasecurity/trivy-action@0.28.0
-#         with:
-#           scan-type: fs
-#           scan-ref: .
-#           ignore-unfixed: true
-#           severity: CRITICAL,HIGH
-
-#       - name: OWASP Dependency-Check
-#         uses: dependency-check/Dependency-Check_Action@main
-#         id: Depcheck
-#         with:
-#           project: 'effulgencetech'
-#           path: '.'
-#           format: 'HTML'
-#           out: 'reports'
-#           args: >
-#             --failOnCVSS 7
-#             --enableRetired
-
-#       - name: Upload OWASP Dependency-Check Report
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: OWASP Depcheck Report
-#           path: reports
-
-#   sonarcloud:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - uses: actions/checkout@v4
-
-#       - name: Install SonarCloud Scanner
-#         run: |
-#           curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-#           unzip -q sonar-scanner.zip
-#           echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-
-#       - name: SonarCloud Scan
-#         env:
-#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#         run: |
-#           sonar-scanner \
-#             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-#             -Dsonar.organization=${SONAR_ORGANIZATION} \
-#             -Dsonar.branch.name=${GITHUB_REF_NAME} \
-#             -Dsonar.sources=. \
-#             -Dsonar.host.url=https://sonarcloud.io \
-#             -Dsonar.login=$SONAR_TOKEN
-
-#   terraform:
-#     name: Deploy Infra with Terraform
-#     runs-on: ubuntu-latest
-#     needs: security-scan
-
-#     steps:
-#       - uses: actions/checkout@v4
-
-#       - name: Set up Terraform
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: 1.6.6
-
-Part 4 - Configuring credentials
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
-
-#       - name: Terraform Init
-#         working-directory: env/dev
-#         run: terraform init -input=false
-
-#       - name: Create EKS Cluster Stack (Targeted)
-#         working-directory: env/dev
-#         run: |
-#           terraform apply \
-#             --auto-approve \
-#             -target=module.eks.aws_cloudformation_stack.eks_cluster_stack
-
-#       - name: Update kubeconfig for EKS
-#         run: |
-#           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
-#       - name: Terraform Full Apply (Post Cluster)
-#         working-directory: env/dev
-#         run: terraform apply --auto-approve
-
-#       - name: Check ArgoCD Status
-#         run: |
-#           echo "Checking ArgoCD pods status..."
-#           kubectl get pods -n argocd
-#           echo "Waiting for ArgoCD server pod to be ready..."
-#           kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s
-
-#   deploy-k8s:
-#     name: ArgoCD Sync
-#     runs-on: ubuntu-latest
-#     needs: terraform
-
-#     steps:
-#       - uses: actions/checkout@v4
-
-#       - name: Set up Git user
-#         run: |
-#           git config user.name github-actions[bot]
-#           git config user.email github-actions[bot]@users.noreply.github.com
-
-#       - name: Pull latest before pushing
-#         run: |
-#           git pull --rebase origin main
-
-#       - name: Push changes
-#         env:
-#           GH_PAT: ${{ secrets.GH_PAT }}
-#         run: |
-#           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/dainmusty/gnpc-terraform-infra-k8s-web-app.git
-#           git push origin main
-
-11. Once you define your credentials for eg. aws access keys and secret access keys, then you go to github and register or create all the access controls. This is to allow GitActions to permit terraform to access your aws account including they aws region you are working in. Go to the repo you are working on in github, go to settings, go to actions/variables, then create the secrets below for terraform. You also need to create a secret for the sonarqube token and paste the value generated for the project in sonarcloud.see below that section in the workflow
-
-# - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
-# SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#         run: |
-#           sonar-scanner \
-#             -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-
-# How to access your prometheus and Grafana
-12. 
-
-
-2️⃣ Use tee (terraform plan | tee tfplan.txt)
-
-✅ Pros:
-
-You get the best of both worlds — see plan live in logs + save for artifact/PR
-
-Speeds up review/debugging (no artifact download needed)
-
-Commonly used in real-world CI/CD pipelines (AWS, HashiCorp examples, etc.)
-
-❌ Cons:
-
-Slightly larger workflow logs
-
-If your plan includes sensitive data (rare), it will appear in logs
-
-🔹 This is the most practical and balanced best practice for teams that review plan logs regularly.
-
-✅ Recommended Best Practice for You
-
-Since your pipeline already uploads the plan artifact and also creates a PR for plan review —
-👉 use tee so you can view plans directly in the GitHub Actions UI and still attach them to PRs.
-
+GitHub Actions  
+Terraform  
+AWS EKS  
+Kubernetes  
+ArgoCD  
+Trivy  
+OWASP Dependency Check  
+SonarCloud  
+Prometheus  
+Grafana
