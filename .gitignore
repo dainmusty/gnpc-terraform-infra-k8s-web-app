@@ -56,3 +56,4 @@ node_modules/
 # Kubernetes specific
 *.kubeconfig
 *.txt
+*.cfg
